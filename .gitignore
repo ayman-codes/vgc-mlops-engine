@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.pytest_cache/
+.coverage
+.pytest_cache/
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Dependency Files
+uv.lock
+pipfile.lock
+
+# Environment Variables
+.env
+
+# Build Artifacts
+build/
+dist/
+*.egg-info/
+
+# Docker
+.dockerignore
+
+my_battle_policy.py
+selection_policy.py
+TeamBuildPolicy.py
+competitor.py

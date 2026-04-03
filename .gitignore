@@ -31,3 +31,9 @@ my_battle_policy.py
 selection_policy.py
 TeamBuildPolicy.py
 competitor.py
+
+TODO.md
+
+# import helper
+PythonImportHelper-v2-Completion.json
+.vscode/.vscode/

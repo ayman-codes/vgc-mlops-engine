@@ -27,3 +27,6 @@ files = ["src/**/*.py"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[project.entry-points."vgc2.competitors"]
+my_agent = "src.agent.battle_policy.registry:get_policy"

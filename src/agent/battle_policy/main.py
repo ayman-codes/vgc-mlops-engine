@@ -2,6 +2,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from vgc2.agent import BattlePolicy
 from vgc2.battle_engine import BattleCommand
 from vgc2.battle_engine.view import StateView
+from vgc2.battle_engine.constants import BattleRuleParam
 
 from src.config.loader import load_battle_weights
 from src.config.model import BattleWeights
@@ -13,7 +14,9 @@ class MyBattlePolicy(BattlePolicy):
     def __init__(self, detailed_logging: bool = False):
         super().__init__()
         self.weights: BattleWeights = load_battle_weights()
-        self.detailed_logging = detailed_logging
+        self.detailed_logging: bool = detailed_logging
+        self._telemetry_buffer: Dict[str, Any] = {}
+        self.battle_params: Optional[BattleRuleParam] = None
 
     def decision(self, state: StateView, turn_count: int) -> List[Tuple[int, int]]:
         my_team = state.sides[0].team.active
@@ -42,7 +45,7 @@ class MyBattlePolicy(BattlePolicy):
         best_joint_score = -float('inf')
         best_commands = ((0, 0), (0, 0))
 
-        # Explicit unpacking aligned with Phase 2.1 signatures
+        # Explicit unpacking
         threat_pkm, max_dmg, is_outsped, max_type_mult = _identify_biggest_threat_opponent(
             unit=my_team[slot_0_idx], 
             unit_side=0, 
@@ -74,7 +77,28 @@ class MyBattlePolicy(BattlePolicy):
                     best_joint_score = joint_q
                     best_commands = (cmd_A, cmd_B)
 
-        return list(best_commands)
+        best_commands = list(best_commands)
+        
+        if self.detailed_logging:
+            self._telemetry_buffer = {
+                "turn_index": turn_count,
+                "slot_0": {
+                    "command": best_commands[0],
+                    "raw_q_value": float(score_A),
+                    "synergy_contribution": float(synergy_modifier)
+                },
+                "slot_1": {
+                    "command": best_commands[1],
+                    "raw_q_value": float(score_B),
+                    "synergy_contribution": float(synergy_modifier)
+                },
+                "joint_q_score": float(best_joint_score)
+            }
+
+        return best_commands
+
+    def get_telemetry(self) -> Dict[str, Any]:
+        return self._telemetry_buffer
 
     def _evaluate_single_slot(self, state: StateView, slot_idx: int) -> List[Tuple[BattleCommand, float]]:
         actions = []

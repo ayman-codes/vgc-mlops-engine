@@ -52,5 +52,12 @@ def test_decision_joint_resolution(mock_identify_threat, mock_score_move, mock_l
     assert commands[0] == (0, 0)
     assert commands[1] == (0, 0)
 
+    policy.detailed_logging = True
+    policy.decision(state, turn_count=2)
+    telemetry = policy.get_telemetry()
+    
+    assert telemetry["turn_index"] == 2
+    assert "slot_0" in telemetry
+    assert "joint_q_score" in telemetry
 if __name__ == "__main__":
     pytest.main([__file__])

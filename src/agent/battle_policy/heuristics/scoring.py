@@ -1,47 +1,40 @@
-from typing import List
-from vgc2.core.GameState import GameState
-from vgc2.core.Pkm import Pkm, Move
+from vgc2.battle_engine.view import StateView, BattlingPokemonView
+from vgc2.battle_engine.move import BattlingMove
 from vgc2.battle_engine.damage_calculator import calculate_damage
-from .threat import estimate_incoming_threat
+from vgc2.battle_engine.constants import BattleRuleParam
+from vgc2.battle_engine.modifiers import Stat
+from src.agent.battle_policy.heuristics.threat import estimate_incoming_threat
 
 MAX_SCORE = 1000.0
 
-def _score_single_offensive_move(attacker: Pkm, target: Pkm, move: Move, state: GameState) -> float:
+def _score_single_offensive_move(attacker: BattlingPokemonView, target: BattlingPokemonView, move: BattlingMove, state: StateView, params: BattleRuleParam, attacker_side: int) -> float:
     if move.pp <= 0 or target.hp <= 0:
         return -float('inf')
 
-    damage = calculate_damage(attacker, target, move, state)
+    damage = calculate_damage(params=params, attacking_side=attacker_side, move=move.constants, state=state, attacker=attacker, defender=target)
     
-    # Calculate base percentage of HP removed
-    score = (damage / target.max_hp) * 100.0
+    score = (damage / target.hp) * 100.0 if target.hp > 0 else 0.0
     
-    # KO Bonus: Prioritize moves that secure a knockout
     if damage >= target.hp:
         score += 500.0
         
     return min(score, MAX_SCORE)
 
-def _score_protect_move(unit: Pkm, state: GameState) -> float:
-    threat = estimate_incoming_threat(unit, state)
+def _score_protect_move(unit: BattlingPokemonView, unit_side: int, state: StateView) -> float:
+    threat = estimate_incoming_threat(unit, unit_side, state)
     
-    # Scale score based on lethal threat and outspeed status
     if threat["is_lethal"] and threat["is_outsped"]:
         return 600.0
     
-    # Moderate score for general damage mitigation
     return threat["aggro_score"] * 300.0
 
-def _score_single_switch_action(unit: Pkm, switch_in: Pkm, state: GameState) -> float:
+def _score_single_switch_action(unit: BattlingPokemonView, switch_in: BattlingPokemonView, unit_side: int, state: StateView) -> float:
     if switch_in.hp <= 0:
         return -float('inf')
         
-    current_threat = estimate_incoming_threat(unit, state)
-    potential_threat = estimate_incoming_threat(switch_in, state)
+    current_threat = estimate_incoming_threat(unit, unit_side, state)
+    potential_threat = estimate_incoming_threat(switch_in, unit_side, state)
     
-    # A switch is valuable if the incoming Pokemon has higher survival probability
-    # compare penalty multipliers: higher is better
     score = (potential_threat["penalty_multiplier"] - current_threat["penalty_multiplier"]) * 500.0
     
-    # Type advantage shift evaluation
-    # Switch is favored if switch_in resists incoming max damage types
     return max(score, 0.0)

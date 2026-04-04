@@ -15,7 +15,7 @@ def test_decision_joint_resolution(mock_identify_threat, mock_score_move, mock_l
     mock_load_weights.return_value = mock_weights
     
     mock_score_move.return_value = 500.0
-    mock_identify_threat.return_value = (None, 0.0, False)
+    mock_identify_threat.return_value = (None, 0.0, False, 1.0)
 
     policy = MyBattlePolicy()
     state = MagicMock()

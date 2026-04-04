@@ -43,12 +43,13 @@ class MyBattlePolicy(BattlePolicy):
         best_commands = ((0, 0), (0, 0))
 
         # Explicit unpacking aligned with Phase 2.1 signatures
-        threat_pkm, max_dmg, is_outsped = _identify_biggest_threat_opponent(
+        threat_pkm, max_dmg, is_outsped, max_type_mult = _identify_biggest_threat_opponent(
             unit=my_team[slot_0_idx], 
             unit_side=0, 
             opponents=state.sides[1].team.active, 
-            state=state
-        )
+            state=state,
+            params=self.battle_params
+            )
 
         for cmd_A, score_A in top_A:
             for cmd_B, score_B in top_B:
@@ -57,6 +58,8 @@ class MyBattlePolicy(BattlePolicy):
                     state=state, 
                     cmd_A=cmd_A, 
                     cmd_B=cmd_B, 
+                    unit_A=my_team[slot_0_idx],
+                    unit_B=my_team[slot_1_idx],
                     biggest_threat=threat_pkm, 
                     weights=self.weights,
                     score_A=score_A,

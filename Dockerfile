@@ -1,28 +1,29 @@
 # Builder Stage
-FROM python:3.11-slim AS Builder
+FROM python:3.14-slim AS builder
 WORKDIR /app
 
-# install uv dependency
+RUN apt-get update && apt-get install -y git build-essential
 RUN pip install uv
 
-# Copy dependecy manifest
+# Enforce deterministic environment allocation
+RUN python -m venv /app/.venv
+ENV VIRTUAL_ENV="/app/.venv"
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Resolve project dependencies into the active virtual environment
 COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --python /app/.venv/bin/python
 
-# Synchronize dependencies into ve
-RUN uv sync --frozen --no-dev
+# Compile and inject framework into the identical virtual environment
+RUN git clone https://gitlab.com/DracoStriker/pokemon-vgc-engine.git /tmp/vgc
+RUN uv pip install --python /app/.venv/bin/python /tmp/vgc
 
-# RUNTIME
-FROM python:3.11-slim
+# Runtime Stage
+FROM python:3.14-slim
 WORKDIR /app
 
-# Transfer compiled ve
 COPY --from=builder /app/.venv /app/.venv
-
-# Prepend the ve to sys path
-ENV PATH = "/app/.venv/bin:$PATH"
-
-# Tranfer core app logic and configs
+ENV PATH="/app/.venv/bin:$PATH"
 COPY src/ ./src/
 
-# Default execution
 CMD ["python", "-m", "src.agent.battle_policy.main"]

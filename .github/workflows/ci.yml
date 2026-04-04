@@ -28,7 +28,7 @@ jobs:
         
       - name: Execute Mypy Static Analysis
         # Temporary bypass 
-        run: uv run mypy src/ tests/ || true
+        run: uv run mypy src/ tests/
         
       - name: Execute Pytest Suite
         run: uv run pytest tests/

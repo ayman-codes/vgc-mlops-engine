@@ -15,7 +15,7 @@ class MyBattlePolicy(BattlePolicy):
         self.weights: BattleWeights = load_battle_weights()
         self.detailed_logging = detailed_logging
 
-    def decision(self, state: StateView, turn_count: int) -> List[BattleCommand]:
+    def decision(self, state: StateView, turn_count: int) -> List[Tuple[int, int]]:
         my_team = state.sides[0].team.active
         active_indices = [i for i, p in enumerate(my_team) if p is not None and p.hp > 0]
         
@@ -30,33 +30,42 @@ class MyBattlePolicy(BattlePolicy):
         slot_1_idx = active_indices[1]
 
         # 1. Independent Evaluation
-        # actions_A/B format: List[Tuple[BattleCommand, float_base_score]]
         actions_A = self._evaluate_single_slot(state, slot_0_idx)
         actions_B = self._evaluate_single_slot(state, slot_1_idx)
 
-        # 2. Truncation (Heuristic Pruning)
-        # Sort by base Q-value and isolate top K candidates (K=3)
+        # 2. Truncation
         K = 3
         top_A = sorted(actions_A, key=lambda x: x[1], reverse=True)[:K]
         top_B = sorted(actions_B, key=lambda x: x[1], reverse=True)[:K]
 
         # 3. Synergistic Matrix Resolution
-        # Constrains O(N^4) space to a constant O(K^2) check
         best_joint_score = -float('inf')
         best_commands = ((0, 0), (0, 0))
 
-        biggest_threat = _identify_biggest_threat_opponent(state)
+        # Explicit unpacking aligned with Phase 2.1 signatures
+        threat_pkm, max_dmg, is_outsped = _identify_biggest_threat_opponent(
+            unit=my_team[slot_0_idx], 
+            unit_side=0, 
+            opponents=state.sides[1].team.active, 
+            state=state
+        )
 
         for cmd_A, score_A in top_A:
             for cmd_B, score_B in top_B:
                 
                 synergy_modifier = calculate_joint_synergy(
-                    state, cmd_A, cmd_B, biggest_threat, self.weights
+                    state=state, 
+                    cmd_A=cmd_A, 
+                    cmd_B=cmd_B, 
+                    biggest_threat=threat_pkm, 
+                    weights=self.weights,
+                    score_A=score_A,
+                    score_B=score_B
                 )
                 
                 joint_q = (score_A * self.weights.W_BASE_SCORE_A) + \
-                          (score_B * self.weights.W_BASE_SCORE_B) + \
-                          synergy_modifier
+                        (score_B * self.weights.W_BASE_SCORE_B) + \
+                        synergy_modifier
 
                 if joint_q > best_joint_score:
                     best_joint_score = joint_q

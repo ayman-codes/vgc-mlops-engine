@@ -10,7 +10,7 @@ from src.agent.battle_policy.heuristics.scoring import _score_single_offensive_m
 from src.agent.battle_policy.heuristics.threat import _identify_biggest_threat_opponent
 from src.agent.battle_policy.heuristics.synergy import calculate_joint_synergy
 
-class MyBattlePolicy(BattlePolicy):
+class MyBattlePolicy(BattlePolicy): # type: ignore[misc]
     def __init__(self, detailed_logging: bool = False):
         super().__init__()
         self.weights: BattleWeights = load_battle_weights()
@@ -76,26 +76,27 @@ class MyBattlePolicy(BattlePolicy):
                 if joint_q > best_joint_score:
                     best_joint_score = joint_q
                     best_commands = (cmd_A, cmd_B)
-
-        best_commands = list(best_commands)
+                    if self.detailed_logging:
+                        cached_telemetry = (score_A, score_B, synergy_modifier)
         
+        final_commands = list(best_commands)
         if self.detailed_logging:
             self._telemetry_buffer = {
                 "turn_index": turn_count,
                 "slot_0": {
-                    "command": best_commands[0],
-                    "raw_q_value": float(score_A),
-                    "synergy_contribution": float(synergy_modifier)
+                    "command": final_commands[0],
+                    "raw_q_value": float(cached_telemetry[0]),
+                    "synergy_contribution": float(cached_telemetry[2])
                 },
                 "slot_1": {
-                    "command": best_commands[1],
-                    "raw_q_value": float(score_B),
-                    "synergy_contribution": float(synergy_modifier)
+                    "command": final_commands[1],
+                    "raw_q_value": float(cached_telemetry[1]),
+                    "synergy_contribution": float(cached_telemetry[2])
                 },
                 "joint_q_score": float(best_joint_score)
             }
 
-        return best_commands
+        return final_commands
 
     def get_telemetry(self) -> Dict[str, Any]:
         return self._telemetry_buffer
@@ -111,7 +112,7 @@ class MyBattlePolicy(BattlePolicy):
         if unit.battling_moves:
             for move_idx, move in enumerate(unit.battling_moves):
                 if move.constants.protect:
-                    score = _score_protect_move(unit, 0, state)
+                    score = _score_protect_move(unit, 0, state, self.battle_params)
                     actions.append(((move_idx, slot_idx), score))
                 else:
                     opponents = state.sides[1].team.active
@@ -130,7 +131,7 @@ class MyBattlePolicy(BattlePolicy):
         if reserve:
             for res_idx, res_pkm in enumerate(reserve):
                 if res_pkm and res_pkm.hp > 0:
-                    score = score_switch(unit, res_pkm, 0, state)
+                    score = _score_single_switch_action(unit, res_pkm, 0, state, self.battle_params)
                     actions.append(((-1, res_idx), score))
 
         if not actions:

@@ -38,3 +38,4 @@ TODO.md
 PythonImportHelper-v2-Completion.json
 .vscode/.vscode/
 .python-version
+temp/

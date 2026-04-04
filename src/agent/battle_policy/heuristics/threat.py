@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from vgc2.battle_engine.view import StateView, BattlingPokemonView
 from vgc2.battle_engine.modifiers import Stat, Type
 from vgc2.battle_engine.constants import BattleRuleParam
@@ -78,12 +78,7 @@ def _identify_biggest_threat_opponent(
         
     return primary_threat, max_dmg, is_outsped, max_type_mult
 
-def estimate_incoming_threat(
-    unit: BattlingPokemonView, 
-    unit_side: int, 
-    state: StateView, 
-    params: BattleRuleParam
-) -> dict:
+def estimate_incoming_threat(unit: BattlingPokemonView, unit_side: int, state: StateView, params: BattleRuleParam) -> Dict[str, Any]:
     opponents = state.sides[1 - unit_side].team.active
     threat_pkm, max_dmg, is_outsped, max_type_mult = _identify_biggest_threat_opponent(unit, unit_side, opponents, state, params)
     

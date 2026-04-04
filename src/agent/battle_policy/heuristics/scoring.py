@@ -23,7 +23,7 @@ def _score_protect_move(unit: BattlingPokemonView, unit_side: int, state: StateV
     threat = estimate_incoming_threat(unit, unit_side, state, params)
     if threat["is_lethal"] and threat["is_outsped"]:
         return 600.0
-    return threat["aggro_score"] * 300.0
+    return float(threat["aggro_score"]) * 300.0
 
 def _score_single_switch_action(unit: BattlingPokemonView, switch_in: BattlingPokemonView, unit_side: int, state: StateView, params: BattleRuleParam) -> float:
     if switch_in.hp <= 0:
@@ -31,6 +31,6 @@ def _score_single_switch_action(unit: BattlingPokemonView, switch_in: BattlingPo
         
     current_threat = estimate_incoming_threat(unit, unit_side, state, params)
     potential_threat = estimate_incoming_threat(switch_in, unit_side, state, params)
-    score = (potential_threat["penalty_multiplier"] - current_threat["penalty_multiplier"]) * 500.0
+    score = (float(potential_threat["penalty_multiplier"]) - float(current_threat["penalty_multiplier"])) * 500.0
     
     return max(score, 0.0)

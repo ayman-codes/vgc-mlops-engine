@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "numpy>=2.2.6",
     "pydantic>=2.12.5",
     "pyyaml>=6.0.3",
+    "scikit-learn>=1.8.0",
     "vgc2",
 ]
 

@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from vgc2.battle_engine.modifiers import Stat, Nature, Category
+from vgc2.battle_engine.modifiers import Nature, Category
 from src.config.selection_model import SelectionConfig
-from src.agent.selection_policy.heuristics.archetype import create_archetype_builds, predict_moveset, predict_opponent_builds
+from src.agent.selection_policy.heuristics.archetype import create_archetype_builds, predict_moveset
 
 def create_mock_move(name: str, category: Category, base_power: int = 50) -> MagicMock:
     move = MagicMock()

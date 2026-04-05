@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from vgc2.battle_engine.modifiers import Status, Weather, Type, Category, Stat
+from vgc2.battle_engine.modifiers import Status, Weather, Category
 from src.config.selection_model import SelectionConfig
 from src.agent.selection_policy.heuristics.scoring import calculate_utility_score
 

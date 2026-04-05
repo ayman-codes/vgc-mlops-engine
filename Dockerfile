@@ -13,6 +13,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Resolve project dependencies into the active virtual environment
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --python /app/.venv/bin/python
+COPY . .
 
 # Compile and inject framework into the identical virtual environment
 RUN git clone https://gitlab.com/DracoStriker/pokemon-vgc-engine.git /tmp/vgc

@@ -38,8 +38,7 @@ def _identify_biggest_threat_opponent(
     unit_speed = calculate_effective_speed(unit, state, unit_side)
     trick_room = state.trickroom
 
-    # Extract defender types
-    u_types = unit.constants.types
+    u_types = unit.constants.species.types
     def_type_1 = u_types[0] if len(u_types) > 0 else Type.NORMAL
     def_type_2 = u_types[1] if len(u_types) > 1 else None
 
@@ -48,8 +47,6 @@ def _identify_biggest_threat_opponent(
         current_opp_max_mult = 1.0
         if opp.battling_moves:
             for move in opp.battling_moves:
-                
-                # Explicit damage calculation
                 dmg = calculate_damage(
                     params=params,
                     attacking_side=1 - unit_side,
@@ -58,9 +55,7 @@ def _identify_biggest_threat_opponent(
                     attacker=opp,
                     defender=unit
                 )
-                
-                # Type vulnerability extraction
-                atk_type = move.constants.type
+                atk_type = move.constants.pkm_type
                 type_mult = get_type_multiplier(atk_type, def_type_1, def_type_2)
                 
                 if dmg > current_opp_max_dmg:

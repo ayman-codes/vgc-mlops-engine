@@ -16,7 +16,7 @@ class MyBattlePolicy(BattlePolicy): # type: ignore[misc]
         self.weights: BattleWeights = load_battle_weights()
         self.detailed_logging: bool = detailed_logging
         self._telemetry_buffer: Dict[str, Any] = {}
-        self.battle_params: Optional[BattleRuleParam] = None
+        self.battle_params: BattleRuleParam = BattleRuleParam()
 
     def decision(self, state: StateView, turn_count: int) -> List[Tuple[int, int]]:
         my_team = state.sides[0].team.active

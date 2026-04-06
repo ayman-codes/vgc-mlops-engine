@@ -31,7 +31,6 @@ def calculate_joint_synergy(
             if biggest_threat and target_A == state.sides[1].team.active.index(biggest_threat):
                 synergy_score += (50.0 * weights.W_TARGET_PRIORITY_BONUS)
 
-    # Explicit framework verification for defensive moves
     is_protect_A = False
     if is_move_A and cmd_A[0] < len(unit_A.battling_moves):
         is_protect_A = unit_A.battling_moves[cmd_A[0]].constants.protect

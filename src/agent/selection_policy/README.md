@@ -1,20 +1,27 @@
 # Selection Policy Module
 
 ## Overview
-This module executes the Selection Policy for the VGC2 framework. It creates a modular, heuristically-driven evaluation pipeline. It serves as the architectural foundation for subsequent Bayesian Hidden State Inference and Nash Equilibrium solvers. The first version was an extensive simulation tournament ran on the elite (12) to determine the best 6.
+This module executes the Selection Policy for the VGC2 framework. It implements a game-theoretic evaluation pipeline, serving as the production foundation for Bayesian Hidden State Inference and Nash Equilibrium solvers. It replaces exhaustive heuristic simulations with statistically grounded probabilistic modeling.
 
 ## Component Architecture
-* **`main.py`**: VGC2 entry point. Orchestrates opponent build prediction, team combination generation, and sub-tournament resolution to select the optimal active roster.
-* **`heuristics/scoring.py`**: Computes deterministic utility scores for non-damaging moves, field effects, and status conditions via normalized damage equivalence.
-* **`heuristics/archetype.py`**: Predicts opponent move-sets and constructs statistical counter-build archetypes utilizing physical/special stat thresholds and VGC meta-heuristics.
-* **`heuristics/matchup.py`**: Executes decoupled simulation sub-tournaments, comparing allied permutations against predicted opponent archetype matrices.
+
+* **`main.py`**: Orchestration entry point. Ingests multidimensional telemetry and yields optimized action arrays.
+* **`inference/`**: 
+    * `bayesian.py`: Computes posterior probabilities of unrevealed opponent entities utilizing teammate co-occurrence prior matrices.
+    * `gmm.py`: Deploys continuous feature space vectorization to map historical statistics to latent meta-game clusters.
+    * `payoff.py`: Generates zero-sum payoff matrices mapping allied permutations against opponent probability distributions.
+    * `nash.py`: Solves payoff matrices utilizing SciPy linear programming (`linprog`) to extract optimal mixed strategy distributions.
+* **`heuristics/`**: 
+    * `archetype.py`: Extrapolates hidden parameters and translates base stats into engine-compliant `Pokemon` builds via threshold meta-heuristics.
+    * `scoring.py`: Computes absolute deterministic utility scalars for non-damaging operations, including status, weather, and terrain control.
+    * `matchup.py`: Executes decoupled $O(N^2)$ simulation sub-tournaments for baseline state value estimation.
 
 ## I/O & Telemetry
-Maintains strict interface parity with `vgc2.agent.SelectionPolicy`. Ingests player and opponent `Team` / `TeamView` objects. Returns a `SelectionCommand` specifying the optimized active Pokémon indices.
+Enforces strict interface parity with `vgc2.agent.SelectionPolicy`. Ingests player `Team` and opponent `TeamView` structures. Outputs a validated `SelectionCommand` specifying the optimized active roster indices.
 
 ## Execution Pipeline
-1. Ingest opponent team preview objects.
-2. Execute `predict_opponent_builds` to extrapolate hidden stats, natures, and unrevealed moves.
-3. Generate combinatorial matrices mapping allied team pairs against predicted opponent pairs.
-4. Run `run_sub_tournament` utilizing `GreedyBattlePolicy` to compute baseline win probabilities.
-5. Rank permutations and yield the final `SelectionCommand` array.
+1. **State Ingestion:** Parse $6 \times 6$ `TeamPreview` environment matrices.
+2. **Hidden State Estimation:** Execute Bayesian recursive updates to impute unrevealed opponent configurations.
+3. **Archetype Projection:** Instantiate engine-compliant opponent models via GMM cluster centroids and `predict_opponent_builds` logic.
+4. **Simulation Matrix Construction:** Generate zero-sum payoff matrices via combinatorial execution of allied pairs against predicted opponent pairs utilizing a baseline `GreedyBattlePolicy`.
+5. **Equilibrium Resolution:** Compute the optimal selection strategy via Linear Programming and output the `SelectionCommand`.

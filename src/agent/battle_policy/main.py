@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Tuple, Dict, Any
 from vgc2.agent import BattlePolicy
 from vgc2.battle_engine import BattleCommand
 from vgc2.battle_engine.view import StateView

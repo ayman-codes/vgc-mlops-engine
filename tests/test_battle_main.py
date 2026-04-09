@@ -1,10 +1,12 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from src.agent.battle_policy.main import MyBattlePolicy
+from vgc2.battle_engine.constants import Stat
 
 @patch('src.agent.battle_policy.main.load_battle_weights')
 @patch('src.agent.battle_policy.main._score_single_offensive_move')
 @patch('src.agent.battle_policy.main._identify_biggest_threat_opponent')
+
 def test_decision_joint_resolution(mock_identify_threat, mock_score_move, mock_load_weights):
     mock_weights = MagicMock()
     mock_weights.W_BASE_SCORE_A = 1.0
@@ -16,7 +18,16 @@ def test_decision_joint_resolution(mock_identify_threat, mock_score_move, mock_l
     
     mock_score_move.return_value = 500.0
     mock_identify_threat.return_value = (None, 0.0, False, 1.0)
-
+    
+    target_mock = MagicMock()
+    target_mock.hp = 100.0 
+    target_mock.constants.stats = {Stat.MAX_HP: 100.0}
+    
+    opp_team_mock = MagicMock()
+    opp_team_mock.active = [target_mock, MagicMock(hp=100.0)]
+    
+    state_mock = MagicMock()
+    state_mock.sides = {1: MagicMock(team=opp_team_mock)}
     policy = MyBattlePolicy()
     state = MagicMock()
     
@@ -31,13 +42,13 @@ def test_decision_joint_resolution(mock_identify_threat, mock_score_move, mock_l
     move_B = MagicMock()
     move_B.constants.protect = False
     pkm_B.battling_moves = [move_B]
-    
+
     opp = MagicMock()
-    opp.hp = 100
-    
+    opp.hp = 100.0
+    opp.constants.stats = {Stat.MAX_HP: 100.0}
+
     side_0 = MagicMock()
     side_0.team.active = [pkm_A, pkm_B]
-    side_0.team.reserve = []
     
     side_1 = MagicMock()
     side_1.team.active = [opp]

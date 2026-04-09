@@ -11,7 +11,7 @@ from vgc2.agent.battle import GreedyBattlePolicy
 from vgc2.battle_engine.pokemon import Pokemon
 from vgc2.battle_engine.team import Team
 
-from src.agent.battle_policy.main import MyBattlePolicy
+from src.agent.battle_policy.main import MyBattlePolicy # ignore: type
 from temp.my_battle_policy import LabBattlePolicy
 
 # --- Execution Parameters ---

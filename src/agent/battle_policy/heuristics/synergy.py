@@ -1,6 +1,7 @@
 from typing import Optional
 from vgc2.battle_engine import BattleCommand
 from vgc2.battle_engine.view import StateView, BattlingPokemonView
+from vgc2.battle_engine.modifiers import Weather, Type, Stat
 from src.config.model import BattleWeights
 
 def calculate_joint_synergy(
@@ -15,7 +16,6 @@ def calculate_joint_synergy(
     score_B: float
 ) -> float:
     synergy_score = 0.0
-    
     is_move_A = cmd_A[0] >= 0
     is_move_B = cmd_B[0] >= 0
     
@@ -25,21 +25,38 @@ def calculate_joint_synergy(
     target_A = cmd_A[1]
     target_B = cmd_B[1]
 
+    move_A = unit_A.battling_moves[cmd_A[0]].constants if cmd_A[0] < len(unit_A.battling_moves) else None
+    move_B = unit_B.battling_moves[cmd_B[0]].constants if cmd_B[0] < len(unit_B.battling_moves) else None
+
+    if not move_A or not move_B:
+        return synergy_score
+
     if target_A == target_B and target_A != -1:
-        if score_A > 0 and score_B > 0:
-            synergy_score += (100.0 * weights.W_FOCUS_FIRE_BONUS)
-            if biggest_threat and target_A == state.sides[1].team.active.index(biggest_threat):
-                synergy_score += (50.0 * weights.W_TARGET_PRIORITY_BONUS)
+        opponents = state.sides[1].team.active
+        target_pkm = opponents[target_A] if target_A < len(opponents) else None
+        
+        if target_pkm and target_pkm.hp > 0:
+            combined_projection = score_A + score_B
+            if combined_projection >= target_pkm.hp:
+                base_synergy = target_pkm.constants.stats[Stat.MAX_HP] * weights.W_FOCUS_FIRE_BONUS
+                synergy_score += base_synergy
+                
+                if biggest_threat and target_A == opponents.index(biggest_threat):
+                    synergy_score += base_synergy * weights.W_TARGET_PRIORITY_BONUS
 
-    is_protect_A = False
-    if is_move_A and cmd_A[0] < len(unit_A.battling_moves):
-        is_protect_A = unit_A.battling_moves[cmd_A[0]].constants.protect
+    if move_A.weather_start != Weather.CLEAR and move_A.weather_start != state.weather:
+        if move_A.weather_start == Weather.RAIN and move_B.pkm_type == Type.WATER:
+            synergy_score += (score_B * 0.5) * weights.W_ENV_SYNERGY_BONUS
+        elif move_A.weather_start == Weather.SUN and move_B.pkm_type == Type.FIRE:
+            synergy_score += (score_B * 0.5) * weights.W_ENV_SYNERGY_BONUS
 
-    is_protect_B = False
-    if is_move_B and cmd_B[0] < len(unit_B.battling_moves):
-        is_protect_B = unit_B.battling_moves[cmd_B[0]].constants.protect
-    
-    if (is_protect_A and score_B > 150) or (is_protect_B and score_A > 150):
-        synergy_score += (75.0 * weights.W_OFF_DEF_SUPPORT_BONUS)
+    if move_B.weather_start != Weather.CLEAR and move_B.weather_start != state.weather:
+        if move_B.weather_start == Weather.RAIN and move_A.pkm_type == Type.WATER:
+            synergy_score += (score_A * 0.5) * weights.W_ENV_SYNERGY_BONUS
+        elif move_B.weather_start == Weather.SUN and move_A.pkm_type == Type.FIRE:
+            synergy_score += (score_A * 0.5) * weights.W_ENV_SYNERGY_BONUS
+
+    if (move_A.protect and score_B > 0) or (move_B.protect and score_A > 0):
+        synergy_score += max(score_A, score_B) * 0.5 * weights.W_OFF_DEF_SUPPORT_BONUS
 
     return synergy_score

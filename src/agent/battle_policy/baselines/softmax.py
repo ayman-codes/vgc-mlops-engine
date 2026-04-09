@@ -76,12 +76,43 @@ class SoftmaxBattlePolicy(MyBattlePolicy):
         return list(selected_joint_action)
 
     def _sample_softmax(self, actions: Sequence[T], scores: Sequence[float]) -> T:
-        scores_array = np.array(scores, dtype=np.float64)
-        max_score = np.max(scores_array)
-        
-        scaled_scores = (scores_array - max_score) / self.tau
-        exp_scores = np.exp(scaled_scores)
-        probabilities = exp_scores / np.sum(exp_scores)
-        
-        chosen_idx = int(np.random.choice(len(actions), p=probabilities))
-        return actions[chosen_idx]
+            scores_array = np.array(scores, dtype=np.float64)
+            
+            # Sanitize input
+            scores_array = np.nan_to_num(scores_array, nan=-np.inf)
+            max_score = float(np.max(scores_array))
+            
+            if np.isneginf(max_score):
+                return actions[int(np.random.choice(len(actions)))]
+                
+            # Temperature floor limit (fallback to greedy)
+            if self.tau <= 1e-8:
+                best_indices = np.where(scores_array == max_score)[0]
+                return actions[int(np.random.choice(best_indices))]
+                
+            # Scaled domain clamping
+            scaled_scores = (scores_array - max_score) / self.tau
+            scaled_scores = np.clip(scaled_scores, -700.0, 0.0)
+            
+            exp_scores = np.exp(scaled_scores)
+            
+            # Explicitly zero out original -inf indices to bypass underflow noise
+            exp_scores[np.isneginf(scores_array)] = 0.0
+            
+            sum_exp = np.sum(exp_scores)
+            if sum_exp == 0.0 or np.isnan(sum_exp):
+                return actions[int(np.random.choice(len(actions)))]
+                
+            probabilities = exp_scores / sum_exp
+            
+            # Final safety net and L1 normalization
+            if np.isnan(probabilities).any():
+                probabilities = np.nan_to_num(probabilities, nan=0.0)
+                
+            prob_sum = np.sum(probabilities)
+            if prob_sum == 0.0:
+                return actions[int(np.random.choice(len(actions)))]
+                
+            probabilities /= prob_sum
+            
+            return actions[int(np.random.choice(len(actions), p=probabilities))]

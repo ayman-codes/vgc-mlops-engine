@@ -1,6 +1,9 @@
 import concurrent.futures
 import multiprocessing
 from typing import Tuple
+import matplotlib.pyplot as plt 
+import matplotlib.patches as mpatches
+import numpy as np
 
 from vgc2.battle_engine import BattleEngine, State
 from vgc2.battle_engine.view import StateView, TeamView
@@ -17,11 +20,82 @@ from src.agent.battle_policy.baselines.epsilon_greedy import EpsilonGreedyBattle
 from src.agent.battle_policy.baselines.softmax import SoftmaxBattlePolicy
 
 # --- Execution Parameters ---
-ITERATIONS = 5000
+ITERATIONS = 1000
 TEAM_SIZE = 2
 N_MOVES = 4
 N_ACTIVE = 2
 TURN_LIMIT = 50
+
+def plot_results(results):
+    n = len(results)
+    labels = [f"{r['p0']}\nvs\n{r['p1']}" for r in results]
+    wins_p0 = [r["wins_p0"] for r in results]
+    wins_p1 = [r["wins_p1"] for r in results]
+    draws    = [r["draws"]   for r in results]
+
+    x = np.arange(n)
+    bar_w = 0.28
+
+    fig, ax = plt.subplots(figsize=(max(10, n * 2.2), 6))
+    fig.patch.set_facecolor("#0d1117")
+    ax.set_facecolor("#0d1117")
+
+    C_P0    = "#5b8dee"
+    C_P1    = "#e05c5c"
+    C_DRAW  = "#6b7280"
+    C_TEXT  = "#e6edf3"
+    C_MUTED = "#8b949e"
+    C_GRID  = "#21262d"
+
+    b0 = ax.bar(x - bar_w, wins_p0, bar_w, color=C_P0,   zorder=3)
+    b1 = ax.bar(x,          wins_p1, bar_w, color=C_P1,   zorder=3)
+    bd = ax.bar(x + bar_w,  draws,   bar_w, color=C_DRAW, zorder=3)
+
+    for bars in (b0, b1, bd):
+        for bar in bars:
+            h = bar.get_height()
+            if h > 0:
+                ax.text(bar.get_x() + bar.get_width() / 2, h + 4,
+                        str(int(h)), ha="center", va="bottom",
+                        fontsize=8, color=C_TEXT)
+
+    for r_idx, r in enumerate(results):
+        ax.text(x[r_idx], -max(ITERATIONS * 0.08, 40),
+                f"{r['win_rate']:.1f}%", ha="center", va="top",
+                fontsize=9, color=C_P0, fontweight="bold")
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=8, color=C_TEXT, linespacing=1.3)
+    ax.tick_params(axis="y", colors=C_MUTED, labelsize=8)
+    ax.tick_params(axis="x", which="both", length=0)
+    ax.yaxis.grid(True, color=C_GRID, linewidth=0.6, zorder=0)
+    ax.set_axisbelow(True)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    ax.set_ylim(0, ITERATIONS * 1.12)
+    ax.set_ylabel("battles", color=C_MUTED, fontsize=9)
+    ax.set_title(f"Battle Policy Validation  ·  {ITERATIONS} iterations per matchup",
+                 color=C_TEXT, fontsize=12, pad=16)
+
+    legend_items = [
+        mpatches.Patch(color=C_P0,   label="p0 wins"),
+        mpatches.Patch(color=C_P1,   label="p1 wins"),
+        mpatches.Patch(color=C_DRAW, label="draws / timeouts"),
+    ]
+    ax.legend(handles=legend_items, loc="upper right",
+              facecolor="#161b22", edgecolor=C_GRID,
+              labelcolor=C_TEXT, fontsize=9, framealpha=1)
+
+    ax.annotate("p0 win rate shown below each matchup",
+                xy=(0.01, 0.01), xycoords="axes fraction",
+                fontsize=7.5, color=C_MUTED)
+
+    plt.tight_layout()
+    plt.savefig("benchmarks/battle_policies_results.png", dpi=150,
+                bbox_inches="tight", facecolor=fig.get_facecolor())
+    plt.show()
+    print("\nChart saved → battle_policy_results.png")
 
 def generate_mirror_teams() -> Tuple[Team, Team]:
     base_team = gen_team(TEAM_SIZE, N_MOVES)
@@ -103,6 +177,7 @@ def execute_simulation_instance(match_id: int, p0_name: str, p1_name: str) -> in
 
 def execute_validation_pipeline():
     cpu_cores = max(1, multiprocessing.cpu_count() - 1)
+    results = []
     
     matchups = [
         ("MyBattlePolicy", "GreedyBattlePolicy"),
@@ -133,12 +208,23 @@ def execute_validation_pipeline():
                     draws += 1
 
         win_rate = (wins_p0 / ITERATIONS) * 100
-        
+        results.append({
+            "p0": p0_name,
+            "p1": p1_name,
+            "wins_p0": wins_p0,
+            "wins_p1": wins_p1,
+            "draws": draws,
+            "win_rate": win_rate
+        })
+
         print("--- EXECUTION TERMINATED ---")
         print(f"{p0_name} Wins: {wins_p0}")
         print(f"{p1_name} Wins: {wins_p1}")
         print(f"Draws / Timeouts: {draws}")
         print(f"{p0_name} WIN RATE: {win_rate:.2f}%")
 
+
+    plot_results(results)
+    
 if __name__ == '__main__':
     execute_validation_pipeline()

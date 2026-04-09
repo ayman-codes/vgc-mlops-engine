@@ -20,15 +20,18 @@ def test_joint_synergy_focus_fire() -> None:
     
     move_A = MagicMock()
     move_A.weather_start = Weather.CLEAR
+    move_A.protect = False
     unit_A.battling_moves = [MagicMock(constants=move_A)]
     
     move_B = MagicMock()
     move_B.weather_start = Weather.CLEAR
+    move_B.protect = False
     unit_B.battling_moves = [MagicMock(constants=move_B)]
     
     weights = MagicMock()
     weights.W_FOCUS_FIRE_BONUS = 0.5
     weights.W_TARGET_PRIORITY_BONUS = 0.0
+    weights.W_OFF_DEF_SUPPORT_BONUS = 0.0
     
     score = calculate_joint_synergy(state, cmd_A, cmd_B, unit_A, unit_B, None, weights, 60.0, 50.0)
     

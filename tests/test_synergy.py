@@ -41,8 +41,8 @@ def test_joint_synergy_off_def_support() -> None:
     state = MagicMock()
     state.sides = {1: MagicMock(team=MagicMock(active=[MagicMock(hp=100.0), MagicMock(hp=100.0)]))}
     
-    cmd_A = (0, 0)
-    cmd_B = (0, 1) 
+    cmd_A = (0, -1) 
+    cmd_B = (0, 1)
     
     unit_A = MagicMock()
     unit_B = MagicMock()

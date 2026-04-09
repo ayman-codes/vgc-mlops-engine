@@ -1,12 +1,12 @@
 import random
 from typing import Optional, List, cast
 
-from vgc2.agent.battle import GreedyBattlePolicy # type: ignore
+from vgc2.agent.battle import GreedyBattlePolicy
 from vgc2.battle_engine.game_state import State
 from vgc2.battle_engine.view import TeamView
 from vgc2.battle_engine import BattleCommand
 
-class EpsilonGreedyBattlePolicy(GreedyBattlePolicy):
+class EpsilonGreedyBattlePolicy(GreedyBattlePolicy): # type: ignore [misc]
     def __init__(self, epsilon: float = 0.2):
         super().__init__()
         self.epsilon = epsilon

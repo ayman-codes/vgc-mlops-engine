@@ -37,7 +37,7 @@ class MyBattlePolicy(BattlePolicy): # type: ignore[misc]
         actions_B = self._evaluate_single_slot(state, slot_1_idx)
 
         # 2. Truncation
-        K = 3
+        K = 7
         top_A = sorted(actions_A, key=lambda x: x[1], reverse=True)[:K]
         top_B = sorted(actions_B, key=lambda x: x[1], reverse=True)[:K]
 

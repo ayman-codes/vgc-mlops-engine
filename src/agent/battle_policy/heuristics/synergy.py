@@ -43,6 +43,12 @@ def calculate_joint_synergy(
                 
                 if biggest_threat and target_A == opponents.index(biggest_threat):
                     synergy_score += base_synergy * weights.W_TARGET_PRIORITY_BONUS
+                    
+            if score_A >= target_pkm.hp and score_B > 0:
+                synergy_score -= (score_B * 0.5)
+
+    elif target_A != target_B and target_A != -1 and target_B != -1:
+        synergy_score -= max(score_A, score_B) * 0.25
 
     if move_A.weather_start != Weather.CLEAR and move_A.weather_start != state.weather:
         if move_A.weather_start == Weather.RAIN and move_B.pkm_type == Type.WATER:

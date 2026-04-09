@@ -50,6 +50,8 @@ def _score_single_offensive_move(attacker: BattlingPokemonView, target: Battling
         elif not move.constants.self_boosts and any(b < 0 for b in move.constants.boosts):
             score += target_threat["max_incoming_damage"] * 0.5
 
+        score *= 1.35
+
     acc = move.constants.accuracy if move.constants.accuracy else 1.0
     return score * acc
 

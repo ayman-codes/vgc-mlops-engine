@@ -11,6 +11,7 @@ __pycache__/
 .venv/
 venv/
 env/
+.env
 
 # Dependency Files
 uv.lock
@@ -39,3 +40,5 @@ PythonImportHelper-v2-Completion.json
 .vscode/.vscode/
 .python-version
 temp/
+
+limitless_vgc.json

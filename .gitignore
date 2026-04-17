@@ -40,5 +40,6 @@ PythonImportHelper-v2-Completion.json
 .vscode/.vscode/
 .python-version
 temp/
-
+temp.ipynb
+.parquet
 limitless_vgc.json

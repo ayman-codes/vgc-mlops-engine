@@ -12,7 +12,7 @@ def execute_extraction():
     response = requests.get(URL, headers=HEADERS)
     
     if response.status_code == 200:
-        with open(OUTPUT_FILE, "w") as f:
+        with open(OUTPUT_FILE, "w") as f:   
             json.dump(response.json(), f)
     else:
         raise ConnectionError(f"Extraction failed: {response.status_code}")

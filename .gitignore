@@ -43,3 +43,4 @@ temp/
 temp.ipynb
 .parquet
 limitless_vgc.json
+vgc_data/

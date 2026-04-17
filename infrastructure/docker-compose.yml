@@ -18,7 +18,7 @@ services:
       - N8N_RESTRICT_FILE_ACCESS_TO=/data
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./vgc_data:/data
+      - ./data:/data
     networks:
       - vgc_network
 

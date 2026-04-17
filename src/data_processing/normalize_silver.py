@@ -1,41 +1,143 @@
+import json
+import pandas as pd
 import os
-import duckdb
-from huggingface_hub import hf_hub_download
-from dotenv import load_dotenv
+import glob
+from typing import Any
+from thefuzz import process
 
-OUTPUT_DIR = "./vgc_data/showdown_logs"
-TARGET_FILE = "logs_gen9vgc2026regfbo3.json"
-REPO_ID = "cameronangliss/vgc-battle-logs"
+POKEAPI_PATH = "data/raw/pokeapi_base.json"
+LIMITLESS_DIR = "data/raw/limitless/"
+OUTPUT_PATH = "data/processed/silver_standings.parquet"
 
-def execute_duckdb_extraction() -> None:
-    load_dotenv()
-    hf_token: str | None = os.getenv("HF_TOKEN")
-    
-    if not hf_token:
-        raise ValueError("HF_TOKEN missing from .env file.")
+COLUMNS = [
+    "player", "placing", "wins", "losses", "ties", "slot", 
+    "limitless_species_id", "pokeapi_id", "item", "ability", 
+    "tera_type", "move_1", "move_2", "move_3", "move_4"
+]
 
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+STATIC_OVERRIDE = {
+    "basculegion": 902,
+    "urshifu": 892,
+    "urshifu-rapid-strike": 10191,
+    "tornadus": 641,
+    "thundurus": 642,
+    "landorus": 645,
+    "enamorus": 905,
+    "indeedee": 876,
+    "ogerpon": 1011,
+    "calyrex": 898,
+    "calyrex-shadow": 10194,
+    "calyrex-ice": 10193
+}
+
+FUZZY_THRESHOLD = 85
+
+def extract_players(data_node: Any) -> list[dict[str, Any]]:
+    if isinstance(data_node, dict):
+        if "decklist" in data_node or "teamlist" in data_node:
+            return [data_node]
+        elif "data" in data_node:
+            return extract_players(data_node["data"])
+    elif isinstance(data_node, list):
+        out: list[dict[str, Any]] = []
+        for item in data_node:
+            out.extend(extract_players(item))
+        return out
+    return []
+
+def resolve_entity(limitless_id: Any, poke_map: dict[str, int], poke_keys: list[str]) -> int:
+    if not limitless_id:
+        return -1
+        
+    limitless_id_str = str(limitless_id).lower()
     
-    print("Executing direct network transfer...")
-    file_path = hf_hub_download(
-        repo_id=REPO_ID,
-        filename=TARGET_FILE,
-        repo_type="dataset",
-        token=hf_token,
-        local_dir=OUTPUT_DIR
-    )
+    if limitless_id_str in poke_map:
+        return poke_map[limitless_id_str]
+        
+    if limitless_id_str in STATIC_OVERRIDE:
+        return STATIC_OVERRIDE[limitless_id_str]
+        
+    match, score = process.extractOne(limitless_id_str, poke_keys)
+    if score >= FUZZY_THRESHOLD:
+        return poke_map[match]
+        
+    return -1
+
+def execute_normalization() -> None:
+    with open(POKEAPI_PATH, "r", encoding="utf-8") as f:
+        poke_data = json.load(f)
+
+    poke_map = {}
+    for p in poke_data.get("results", []):
+        poke_id = int(p["url"].rstrip("/").split("/")[-1])
+        poke_map[p["name"].lower()] = poke_id
+        
+    poke_keys = list(poke_map.keys())
+
+    partitioned_files = glob.glob(os.path.join(LIMITLESS_DIR, "*.json"))
     
-    parquet_path = os.path.join(OUTPUT_DIR, f"vgc_bench_{TARGET_FILE.split('.')[0]}.parquet")
+    raw_standings = []
+    for file_path in partitioned_files:
+        with open(file_path, "r", encoding="utf-8") as f:
+            raw_standings.extend(json.load(f))
+
+    normalized_records = []
+    players = extract_players(raw_standings)
+
+    for player_data in players:
+        player_name = player_data.get("player") or player_data.get("name")
+        placing = player_data.get("placing")
+        record = player_data.get("record", {})
+        decklist = player_data.get("decklist") or player_data.get("teamlist", [])
+        
+        invalid_format_flag = False
+        for pkmn in decklist:
+            item = str(pkmn.get("item", "")).lower()
+            if "ite" in item and item not in ["eviolite", "meteorite"]: 
+                invalid_format_flag = True
+                break
+                
+        if invalid_format_flag:
+            continue
+        
+        for slot, pkmn in enumerate(decklist):
+            limitless_id = pkmn.get("id", "")
+            pokeapi_id = resolve_entity(limitless_id, poke_map, poke_keys)
+            
+            attacks = pkmn.get("attacks", [])
+            attacks += [None] * (4 - len(attacks))
+            
+            normalized_records.append({
+                "player": player_name,
+                "placing": placing if placing is not None else -1,
+                "wins": record.get("wins", 0),
+                "losses": record.get("losses", 0),
+                "ties": record.get("ties", 0),
+                "slot": slot + 1,
+                "limitless_species_id": limitless_id,
+                "pokeapi_id": pokeapi_id,
+                "item": pkmn.get("item"),
+                "ability": pkmn.get("ability"),
+                "tera_type": pkmn.get("tera", "None"),
+                "move_1": attacks[0],
+                "move_2": attacks[1],
+                "move_3": attacks[2],
+                "move_4": attacks[3]
+            })
+
+    df = pd.DataFrame(normalized_records, columns=COLUMNS)
     
-    print("Executing DuckDB out-of-core Parquet serialization...")
-    duckdb.sql("INSTALL json;")
-    duckdb.sql("LOAD json;")
+    df = df.drop_duplicates(subset=['player', 'limitless_species_id', 'slot']).reset_index(drop=True)
+
+    for col in ['move_2', 'move_3', 'move_4']:
+        df[col] = df[col].fillna('None')
+        
+    df['tera_type'] = df['tera_type'].fillna('None')
     
-    # 2GB object allocation override
-    query = f"COPY (SELECT * FROM read_json_auto('{file_path}', maximum_object_size=2147483648)) TO '{parquet_path}' (FORMAT PARQUET);"
-    duckdb.sql(query)
-    
-    print(f"Serialization absolute. Output: {parquet_path}")
+    df = df[df['pokeapi_id'] != -1].reset_index(drop=True)
+
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    df.to_parquet(OUTPUT_PATH, index=False)
 
 if __name__ == "__main__":
-    execute_duckdb_extraction()
+    execute_normalization()

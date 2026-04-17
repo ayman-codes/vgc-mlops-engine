@@ -2,7 +2,7 @@ import requests
 import json
 import os
 
-OUTPUT_DIR = "./vgc_data"
+OUTPUT_DIR = "data/raw"
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "pokeapi_base.json")
 URL = "https://pokeapi.co/api/v2/pokemon?limit=10000"
 HEADERS = {"User-Agent": "vgc-mlops-engine/1.0 (Data Engineering Portfolio Project)"}

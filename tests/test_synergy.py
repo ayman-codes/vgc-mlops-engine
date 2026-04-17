@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock
 from vgc2.battle_engine.modifiers import Weather, Stat
 from src.agent.battle_policy.heuristics.synergy import calculate_joint_synergy

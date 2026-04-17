@@ -2,6 +2,7 @@ import json
 import pandas as pd
 import os
 from thefuzz import process
+from typing import Any
 
 POKEAPI_PATH = "vgc_data/pokeapi_base.json"
 LIMITLESS_PATH = "vgc_data/limitless_vgc.json"
@@ -24,41 +25,41 @@ STATIC_OVERRIDE = {
 
 FUZZY_THRESHOLD = 85
 
-def extract_players(data_node):
+def extract_players(data_node: Any) -> list[dict[str, Any]]:
     if isinstance(data_node, dict):
         if "decklist" in data_node or "teamlist" in data_node:
             return [data_node]
         elif "data" in data_node:
             return extract_players(data_node["data"])
     elif isinstance(data_node, list):
-        out = []
+        out: list[dict[str, Any]] = []
         for item in data_node:
             out.extend(extract_players(item))
         return out
     return []
 
-def resolve_entity(limitless_id, poke_map, poke_keys):
+def resolve_entity(limitless_id: Any, poke_map: dict[str, int], poke_keys: list[str]) -> int:
     if not limitless_id:
         return -1
         
-    limitless_id = str(limitless_id).lower()
+    limitless_id_str = str(limitless_id).lower()
     
     # Exact Match
-    if limitless_id in poke_map:
-        return poke_map[limitless_id]
+    if limitless_id_str in poke_map:
+        return poke_map[limitless_id_str]
         
     # Static Override
-    if limitless_id in STATIC_OVERRIDE:
-        return STATIC_OVERRIDE[limitless_id]
+    if limitless_id_str in STATIC_OVERRIDE:
+        return STATIC_OVERRIDE[limitless_id_str]
         
     # Fuzzy Match
-    match, score = process.extractOne(limitless_id, poke_keys)
+    match, score = process.extractOne(limitless_id_str, poke_keys)
     if score >= FUZZY_THRESHOLD:
         return poke_map[match]
         
     return -1
 
-def execute_normalization():
+def execute_normalization() -> None:
     with open(POKEAPI_PATH, "r", encoding="utf-8") as f:
         poke_data = json.load(f)
 

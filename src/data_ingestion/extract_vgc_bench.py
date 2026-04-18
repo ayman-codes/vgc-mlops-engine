@@ -3,7 +3,7 @@ import duckdb
 from huggingface_hub import hf_hub_download
 from dotenv import load_dotenv
 
-OUTPUT_DIR = "./vgc_data/showdown_logs"
+OUTPUT_DIR = "data/raw/showdown_logs"
 TARGET_FILE = "logs_gen9vgc2026regfbo3.json"
 REPO_ID = "cameronangliss/vgc-battle-logs"
 

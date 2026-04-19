@@ -1,40 +1,50 @@
 import os
+import json
+import time
 import pandas as pd
 import requests
-import time
 from typing import Dict, Any, List
 
-SILVER_PATH = "data/processed/silver_standings.parquet"
+POKEAPI_BASE_PATH = "data/raw/pokeapi_base.json"
 OUTPUT_STATS = "data/processed/dimension_stats.parquet"
 OUTPUT_MOVES = "data/processed/dimension_moves.parquet"
 
-def get_pokeapi_data(endpoint: str, item_id: str | int) -> Dict[str, Any]:
-    url = f"https://pokeapi.co/api/v2/{endpoint}/{item_id}/"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
+def get_api_data(url: str, retries: int = 3) -> Dict[str, Any]:
+    """Fetches API data with exponential backoff to prevent silent drops."""
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 429:
+                time.sleep(2 ** attempt)
+                continue
+            else:
+                response.raise_for_status()
+        except requests.RequestException as e:
+            if attempt == retries - 1:
+                raise RuntimeError(f"API extraction failed for {url}: {e}")
+            time.sleep(2 ** attempt)
     return {}
 
 def execute_extraction() -> None:
-    if not os.path.exists(SILVER_PATH):
-        raise FileNotFoundError(f"Dependency missing: {SILVER_PATH}. Execute Stage 3 normalization prior to dimension extraction.")
+    if not os.path.exists(POKEAPI_BASE_PATH):
+        raise FileNotFoundError(f"Missing dependency: {POKEAPI_BASE_PATH}. Execute Stage 2.1.")
 
-    df = pd.read_parquet(SILVER_PATH)
-    
-    unique_pokemon = df['pokeapi_id'].dropna().unique()
-    move_cols = ['move_1', 'move_2', 'move_3', 'move_4']
-    unique_moves = pd.unique(df[move_cols].values.ravel('K'))
-    unique_moves = [m for m in unique_moves if m and str(m).lower() != 'none']
-
-    stats_records: List[Dict[str, Any]] = []
-    for pid in unique_pokemon:
-        if pid == -1: 
-            continue
-        data = get_pokeapi_data("pokemon", pid)
-        if not data: 
-            continue
+    with open(POKEAPI_BASE_PATH, "r", encoding="utf-8") as f:
+        base_data = json.load(f)
         
-        base_stats = {stat['stat']['name']: stat['base_stat'] for stat in data.get('stats', [])}
+    pokemon_results = base_data.get("results", [])
+    stats_records: List[Dict[str, Any]] = []
+    
+    # Universal Species Extraction
+    for p in pokemon_results:
+        pid = int(p["url"].rstrip("/").split("/")[-1])
+        data = get_api_data(p["url"])
+        if not data:
+            continue
+            
+        base_stats = {s['stat']['name']: s['base_stat'] for s in data.get('stats', [])}
         types = [t['type']['name'] for t in data.get('types', [])]
         
         stats_records.append({
@@ -48,24 +58,31 @@ def execute_extraction() -> None:
             "type_1": types[0] if len(types) > 0 else "None",
             "type_2": types[1] if len(types) > 1 else "None"
         })
-        time.sleep(0.05) 
-
-    moves_records: List[Dict[str, Any]] = []
-    for move in unique_moves:
-        move_formatted = str(move).lower().replace(" ", "-")
-        data = get_pokeapi_data("move", move_formatted)
-        if not data: 
-            continue
+        time.sleep(0.25)  # Strictly enforce 0.6-second delay to comply with 100 req/min limit 
         
+    # Universal Move Extraction
+    # Expanded limit to ensure full coverage of potential out-of-vocabulary moves
+    moves_base = get_api_data("https://pokeapi.co/api/v2/move?limit=2000")
+    move_results = moves_base.get("results", [])
+    moves_records: List[Dict[str, Any]] = []
+    
+    for m in move_results:
+        # Dimension Table Compression: Strip hyphens and spaces for relational join compatibility
+        move_name = m["name"].replace("-", "").replace(" ", "").lower()
+        data = get_api_data(m["url"])
+        if not data:
+            continue
+            
         moves_records.append({
-            "move_name": move,
+            "move_name": move_name,
             "base_power": data.get("power"),
             "accuracy": data.get("accuracy"),
             "type": data.get("type", {}).get("name", "None"),
             "damage_class": data.get("damage_class", {}).get("name", "None")
         })
-        time.sleep(0.05)
+        time.sleep(0.25)
 
+    os.makedirs(os.path.dirname(OUTPUT_STATS), exist_ok=True)
     pd.DataFrame(stats_records).to_parquet(OUTPUT_STATS, index=False)
     pd.DataFrame(moves_records).to_parquet(OUTPUT_MOVES, index=False)
 

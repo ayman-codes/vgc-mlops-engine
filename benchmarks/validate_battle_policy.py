@@ -1,5 +1,6 @@
 import concurrent.futures
 import multiprocessing
+import os
 from typing import Tuple
 import matplotlib.pyplot as plt 
 import matplotlib.patches as mpatches
@@ -92,10 +93,11 @@ def plot_results(results):
                 fontsize=7.5, color=C_MUTED)
 
     plt.tight_layout()
-    plt.savefig("benchmarks/battle_policies_results.png", dpi=150,
-                bbox_inches="tight", facecolor=fig.get_facecolor())
+    output_path = "images/battle_policies_results.png"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig(output_path, dpi=150, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.show()
-    print("\nChart saved → battle_policy_results.png")
+    print(f"\nChart saved → {output_path}")
 
 def generate_mirror_teams() -> Tuple[Team, Team]:
     base_team = gen_team(TEAM_SIZE, N_MOVES)

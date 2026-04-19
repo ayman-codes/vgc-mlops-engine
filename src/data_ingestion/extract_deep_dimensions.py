@@ -3,7 +3,7 @@ import json
 import time
 import pandas as pd
 import requests
-from typing import Dict, Any, List
+from typing import Dict, Any, List, cast
 
 POKEAPI_BASE_PATH = "data/raw/pokeapi_base.json"
 OUTPUT_STATS = "data/processed/dimension_stats.parquet"
@@ -15,7 +15,7 @@ def get_api_data(url: str, retries: int = 3) -> Dict[str, Any]:
         try:
             response = requests.get(url)
             if response.status_code == 200:
-                return response.json()
+                return cast(Dict[str, Any], response.json())
             elif response.status_code == 429:
                 time.sleep(2 ** attempt)
                 continue

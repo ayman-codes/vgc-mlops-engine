@@ -18,9 +18,12 @@ The framework is decoupled into core policy engines and supporting infrastructur
 
 1.  **Orchestration Layer (n8n):** Functions as the control plane. Executes cron-scheduled scraping, event-driven data ingestion, AWS S3 routing, pipeline incident alerting, and workflow automation.
 2.  **Battle Policy (Combat Engine):** The curriculum establishes a progressive baseline (Greedy $\rightarrow$ Epsilon-Greedy $\rightarrow$ Softmax $\rightarrow$ Heuristic) to pre-train Deep Reinforcement Learning (DRL) networks trained on all of the other constructed battle policies.
-3.  **Selection Policy (Inference Engine):** Replaces static predictions with statistically grounded mathematical models. Utilizes Gaussian Mixture Models (GMM) for unsupervised archetype discovery and a Bayesian engine for hidden state estimation. Output distributions resolve via a SciPy linear programming Nash Equilibrium solver.
-4.  **Teambuild Policy (Optimization Engine):** Implements the Heuristic-Evolutionary-Simulation Funnel (HESF). Navigates combinatorial synergy spaces using mass-pruning linear optimization and a Genetic Algorithm (GA) seeded by GMM cluster centroids.
-5.  **Quality Assurance:** Enforces strict pipeline integrity via `ruff` for high-performance linting and `hypothesis` for property-based testing of mathematical bounds and array shapes.
+
+ <center><img src="images/Battle%20Policy%20algorithm.png" alt="Battle Policy Diagram" width="1000" height="550"> </center>
+
+1.  **Selection Policy (Inference Engine):** Replaces static predictions with statistically grounded mathematical models. Utilizes Gaussian Mixture Models (GMM) for unsupervised archetype discovery and a Bayesian engine for hidden state estimation. Output distributions resolve via a SciPy linear programming Nash Equilibrium solver.
+2.  **Teambuild Policy (Optimization Engine):** Implements the Heuristic-Evolutionary-Simulation Funnel (HESF). Navigates combinatorial synergy spaces using mass-pruning linear optimization and a Genetic Algorithm (GA) seeded by GMM cluster centroids.
+3.  **Quality Assurance:** Enforces strict pipeline integrity via `ruff` for high-performance linting and `hypothesis` for property-based testing of mathematical bounds and array shapes.
 
 ## Highlighted Skills & Competencies
 

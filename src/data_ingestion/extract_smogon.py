@@ -1,25 +1,31 @@
 import os
 import json
+import time
 import requests
-from urllib.error import HTTPError
 
-# Configuration targets. Modify TARGET_MONTH and FORMAT_TAG to isolate specific rulesets.
 BASE_URL = "https://www.smogon.com/stats/"
-TARGET_MONTH = "2024-04" 
-FORMAT_TAG = "gen9vgc2024regf-1760" 
+FORMAT_TAG = "gen9championsvgc2026regmabo3-1760"
+TARGET_MONTHS = ["2026-05"]
 OUTPUT_DIR = "data/raw/smogon"
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, f"{FORMAT_TAG}.json")
 
-def execute_extraction() -> None:
+def execute_longitudinal_extraction() -> None:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    target_url = f"{BASE_URL}{TARGET_MONTH}/chaos/{FORMAT_TAG}.json"
     
-    response = requests.get(target_url)
-    if response.status_code != 200:
-        raise HTTPError(target_url, response.status_code, f"Extraction failed. Target missing: {target_url}", response.headers, None) # type: ignore
+    for month in TARGET_MONTHS:
+        target_url = f"{BASE_URL}{month}/chaos/{FORMAT_TAG}.json"
+        output_file = os.path.join(OUTPUT_DIR, f"{FORMAT_TAG}_{month}.json")
         
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(response.json(), f)
+        response = requests.get(target_url)
+        if response.status_code == 200:
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(response.json(), f)
+            print(f"Extraction successful: {month}")
+        elif response.status_code == 404:
+            print(f"Data missing for {month}. Target URL returned 404: {target_url}")
+        else:
+            response.raise_for_status()
+            
+        time.sleep(1.0)
 
 if __name__ == "__main__":
-    execute_extraction()
+    execute_longitudinal_extraction()

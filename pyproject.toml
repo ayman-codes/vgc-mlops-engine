@@ -1,0 +1,57 @@
+[project]
+name = "vgc-mlops-engine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "datasets>=4.8.4",
+    "duckdb>=1.5.2",
+    "huggingface-hub>=1.11.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "pyarrow>=23.0.1",
+    "pydantic>=2.12.5",
+    "python-dotenv>=1.2.2",
+    "python-levenshtein>=0.27.3",
+    "pyyaml>=6.0.3",
+    "requests>=2.33.1",
+    "scikit-learn>=1.8.0",
+    "scipy>=1.17.1",
+    "seaborn>=0.13.2",
+    "thefuzz>=0.22.1",
+    "types-requests>=2.33.0.20260408",
+    "poke-env",
+    "vgc-bench",
+    "mlflow",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.151.10",
+    "matplotlib>=3.10.8",
+    "mypy>=1.20.0",
+    "pytest>=9.0.2",
+    "ruff>=0.15.9",
+    "types-pyyaml>=6.0.12.20250915",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+files = ["src/**/*.py"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.uv.sources]
+vgc-bench = { path = "C:/Users/Mohammed Ayman PC/vgc-bench", editable = true }
+
+[tool.uv]
+override-dependencies = [
+    "huggingface-hub>=0.36.2"
+]

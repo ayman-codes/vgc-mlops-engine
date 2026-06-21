@@ -12,7 +12,7 @@ __pycache__/
 venv/
 env/
 .env
-
+.env.backup
 # Dependency Files
 uv.lock
 pipfile.lock
@@ -49,5 +49,8 @@ pokeapi_base.json
 data/
 
 context/
+project_context.md
 .hypothesis/
 .hypothesis/*
+mistakes_learned.md
+TO-DO/*

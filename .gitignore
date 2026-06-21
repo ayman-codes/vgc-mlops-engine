@@ -13,9 +13,7 @@ venv/
 env/
 .env
 .env.backup
-# Dependency Files
-uv.lock
-pipfile.lock
+
 
 # Environment Variables
 .env

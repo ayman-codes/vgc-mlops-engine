@@ -1,6 +1,7 @@
-from src.config.selection_model import SelectionConfig, SelectionHeuristicsConfig
+from src.config.models import AppConfig, BattleWeights, SelectionConfig
 
 __all__ = [
+    "AppConfig",
+    "BattleWeights",
     "SelectionConfig",
-    "SelectionHeuristicsConfig",
 ]

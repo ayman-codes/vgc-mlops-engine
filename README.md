@@ -1,67 +1,159 @@
-# VGC-MLOps Engine: Enterprise AI for Competitive Pokémon
+<p align="center">
+  <h1 align="center">VGC-MLOps Engine</h1>
+  <p align="center"><strong>Enterprise-grade Multi-Agent Reinforcement Learning for Competitive Pokémon VGC</strong></p>
+  <p align="center">
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.14-blue?logo=python&logoColor=white" alt="Python 3.14"></a>
+    <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/your-repo/vgc-mlops-engine/ci.yml?branch=main&logo=github" alt="CI"></a>
+    <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000?logo=ruff" alt="Ruff"></a>
+    <a href="https://mypy-lang.org/"><img src="https://img.shields.io/badge/typed-mypy-039dfc" alt="mypy"></a>
+    <a href="https://mlflow.org/"><img src="https://img.shields.io/badge/MLflow-tracked-0194E2?logo=mlflow" alt="MLflow"></a>
+    <a href="https://prometheus.io/"><img src="https://img.shields.io/badge/monitoring-Prometheus%2FGrafana-E6522C?logo=prometheus" alt="Monitoring"></a>
+    <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/infra-Docker-2496ED?logo=docker" alt="Docker"></a>
+    <br>
+    <a href="https://poke-env.readthedocs.io/"><img src="https://img.shields.io/badge/sim-poke--env-red" alt="poke-env"></a>
+    <a href="https://pypi.org/project/vgc-bench/"><img src="https://img.shields.io/badge/bench-vgc--bench-purple" alt="vgc-bench"></a>
+    <a href="https://scipy.org/"><img src="https://img.shields.io/badge/Nash-SciPy%20LP-8CAE00?logo=scipy" alt="Nash"></a>
+  </p>
+</p>
 
-[![Python 3.14](https://img.shields.io/badge/Python-3.14-blue.svg)](https://www.python.org/)
-[![CI/CD: GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-success.svg)](.github/workflows)
-[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-
-**Transforming heuristic baselines into a production-grade Multi-Agent Reinforcement Learning (MARL) pipeline.**
+---
 
 ## Overview
 
-The VGC-MLOps Engine is an advanced computational architecture designed to model and simulate the Pokémon Video Game Championships (VGC). It functions as a complete multi-agent framework capable of executing complex strategic decision-making in a highly stochastic, partially observable Markov Decision Process (MDP) environment.
+The VGC-MLOps Engine models Pokémon VGC as a **multi-agent, partially observable stochastic MDP** and implements a production-grade AI pipeline spanning **game theory, deep reinforcement learning, Bayesian inference, evolutionary algorithms, and enterprise MLOps**.
 
-Our simulation and benchmarking architecture relies on the `poke-env` programmatic interface and the `vgc-bench` multi-agent evaluation framework. This infrastructure allows our AI models to generalize across highly diverse meta-games by competing directly on locally hosted, zero-latency NodeJS Pokémon Showdown servers.
+Simulation runs on local Pokémon Showdown servers via `poke-env` with `vgc-bench` benchmarking — zero-latency, deterministic, fully parallelizable.
 
-## Technical Architecture & The Algorithmic Arsenal
+---
 
-The framework is decoupled into core policy engines and enterprise MLOps infrastructure. This project is built as a premier demonstration of deploying complex algorithms in a production setting.
+## Core Competencies
 
-### 1. Orchestration & MLOps Layer
-Functions as the control plane for the entire engine.
-*   **MLflow:** For robust hyperparameter and telemetry tracking (e.g., matrix regret, matrix resolution time, inference confidence).
-*   **Prometheus & Grafana:** For real-time hardware monitoring, system latency, and model performance metrics.
-*   **n8n:** Containerized workflow orchestration for event-driven, offline data ingestion.
+| Domain | Skills |
+|--------|--------|
+| **Algorithms** | Evolutionary Algorithms, Bayesian Inference & Naive Bayes, Gaussian Mixture Models (GMM), Nash Equilibrium (Linear Programming), Deep Q-Networks (DQN), Proximal Policy Optimization (PPO), Behavior Cloning (Imitation Learning), Policy Space Response Oracles (PSRO), Self-Play, Fictitious Play, Double Oracle, Epsilon-Greedy / Softmax Exploration, Mixed-Strategy Game Theory |
+| **Services & Architecture** | MLflow (Experiment Tracking, Model Registry), Prometheus + Grafana (Observability, Metrics, Dashboards), n8n (Workflow Orchestration, Event-Driven Pipelines), REST APIs (External Integrations), Cloudflare Tunnels (Secure Remote Access), Container Orchestration (Docker Compose, Multi-Stage Builds) |
+| **Data Engineering** | Bronze → Silver → Gold Medallion Architecture, DuckDB (Out-of-Core Parquet Serialization), HuggingFace Hub (Dataset Versioning), Fuzzy Entity Resolution (`thefuzz`), Cross-Schema Hydration, One-Hot Encoding, Float32 Tensor Generation, Data Quality Gates (Deficit Threshold Enforcement) |
+| **Machine Learning & AI** | scikit-learn (GMM, Clustering, Silhouette Score), SciPy (Linear Programming, `linprog` HiGHS), Population-Based Training, Experience Replay, Frame Stacking, Metagame Archetype Discovery, Procedural Variance Injection |
+| **Reinforcement Learning** | MARL (Multi-Agent RL), PPO, DQN, PSRO League Training, Self-Play, Fictitious Play, Policy Exploitation, Boltzmann Exploration |
+| **MLOps & DevOps** | CI/CD (GitHub Actions: Ruff, mypy, pytest + Hypothesis), Docker (Multi-Stage, Slim Images), `uv` (Fast Python Package Manager, Frozen Lockfiles), Prometheus Metrics Export, Grafana Dashboards, MLflow Tracking & Registry, A/B Testing (Automated Model Comparison), Optuna (Hyperparameter Tuning) |
+| **Software Engineering** | mypy (Strict Mode), Ruff (Linting), pytest + Hypothesis (Property-Based Testing), Pydantic (Configuration Validation), Modular Architecture (Policy Engines, ETL Layers, Plugins), Type Hinting (Strict `mypy` Compliance) |
+| **Infrastructure** | Docker Compose (Multi-Service Orchestration), Cloudflare Tunnels (Zero-Trust Networking), Containerized Telemetry Stack, Cross-Platform Deployment (Windows/WSL2/Linux) |
+| **Domain Expertise** | Competitive Pokémon VGC (Video Game Championships), Game Theory (Zero-Sum Games, Nash Equilibrium), Turn-Based Strategy AI, Hidden Information Inference, Metagame Analysis |
 
-### 2. Battle Policy (Combat & Tactics Engine)
-Executes optimal turn-by-turn combat decisions in the partially observable `poke-env` environment.
-*   **Behavior Cloning (BC):** Imitation Learning model pre-trained on human `vgc-battle-logs` to initialize the Reinforcement Learning agent with competent, non-random weights.
-*   **Deep Q-Networks (DQN) & Experience Replay:** RL architecture utilizing Bellman equations and target networks, coupled with an Experience Replay Buffer to break correlation between consecutive battle samples.
-*   **Proximal Policy Optimization (PPO) & Self-Play (SP):** The core Reinforcement Learning architectures utilized to calculate optimal expected future rewards.
-*   **Frame Stacking:** Data-transformation technique stacking consecutive state frames, allowing neural networks to infer temporal sequences and momentum rather than static snapshots.
-*   **Policy Space Response Oracles (PSRO) & Policy Exploitation:** Population-based multi-agent meta-algorithms. Orchestrates the macro-training loop by probabilistically sampling opponents from a dynamic pool of Fictitious Play, Double Oracle, and historical baseline checkpoints to ensure global strategy generalization and prevent catastrophic forgetting.
+---
 
-### 3. Selection Policy (Team Preview Engine)
-Resolves the combinatorial 4-out-of-6 selection matrix problem.
-*   **Bayesian Inference Engine:** Calculates posterior probabilities of hidden opponent states (masked EVs, items, abilities) during Team Preview utilizing pre-compiled offline co-occurrence adjacency matrices.
-*   **Zero-Sum Payoff Matrices:** Mathematical construct mapping terminal damage outputs of all 15x15 possible Team Preview lead combinations, calculated via parallel batch simulations.
-*   **Nash Equilibrium Resolution:** Applies SciPy linear programming solvers to the Payoff Matrix to extract optimal, unexploitable mixed-strategy deployment vectors.
-*   **Procedural Variance Injection (20% Rule):** Algorithmic mutation (stat inversion, move substitution) applied to baseline opponent arrays. Mathematically forces Game-Theoretic solvers to account for chaotic, off-meta configurations, preventing brittle matrix generation.
-*   **Gaussian Mixture Models (GMM):** Utilized exclusively for offline Exploratory Data Analysis (EDA) to cluster the metagame into distinct archetypes (e.g., Trick Room, Hyper-Offense) for data visualization.
+## Architecture
 
-### 4. Teambuild Policy (Optimization Engine)
-Operates on a Meta-Game Simulation track to evaluate and draft full 6-Pokémon rosters.
-*   **Genetic / Evolutionary Algorithms (GA):** Treats rosters as chromosomes, iteratively evolving Generation 0 seeds by selecting combinations with high statistical win-rates.
-*   **Deep Match-up Predictors:** Neural network fitness evaluators that predict team-vs-team win rates purely from structural composition without executing computationally expensive battle simulations.
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        VGC-MLOps ENGINE                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────────┐   ┌──────────────────┐   ┌─────────────────────┐  │
+│  │   BATTLE POLICY  │   │  SELECTION POLICY│   │  TEAMBUILD POLICY   │  │
+│  │  (Combat Engine)  │   │ (Team Preview)   │   │  (Draft Engine)     │  │
+│  ├──────────────────┤   ├──────────────────┤   ├─────────────────────┤  │
+│  │ • Joint-Action Q │   │ • Bayesian Inf.  │   │ • Genetic Algorithm │  │
+│  │ • Synergy Matrix │   │ • Payoff Matrix  │   │ • Match-up Predictor│  │
+│  │ • DQN / PPO      │   │ • Nash Equilib.  │   │ • Adversarial Eval  │  │
+│  │ • PSRO / Self-Play│  │ • GMM Clustering │   │                     │  │
+│  │ • BC Imitation   │   │ • Variance Inj.  │   │                     │  │
+│  └────────┬─────────┘   └────────┬─────────┘   └─────────────────────┘  │
+│           │                      │                                       │
+│  ┌────────▼──────────────────────▼──────────────────────────────────────┐│
+│  │                     DATA ENGINEERING (Bronze→Silver→Gold)            ││
+│  │  DuckDB  │  HuggingFace  │  PokeAPI  │  Smogon  │  FuzzyMatch       ││
+│  └──────────────────────────────────────────────────────────────────────┘│
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐│
+│  │              MLOps & OBSERVABILITY  LAYER                            ││
+│  │  MLflow  │  Prometheus  │  Grafana  │  n8n  │  Docker  │  GitHub CI ││
+│  └──────────────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+```
 
-## Master Execution Plan
+### Policy Breakdown
 
-### Phase 1: MLOps Infrastructure & Architecture Verification (Completed)
-- [x] Configure localized `poke-env` environments with `vgc-bench` benchmarking baselines.
-- [x] Establish containerized telemetry infrastructure (MLflow, Prometheus, Grafana).
-- [x] Ensure CI/CD compliance (`ruff`, `mypy`, `pytest` + Hypothesis).
+**Battle Policy** — Turn-by-turn double-battle decisions. Each slot is evaluated independently for all actions (attack/protect/switch), then a cross-slot joint synergy matrix resolves optimal action pairs. Baseline exploration strategies (Epsilon-Greedy, Softmax) feed the PSRO league for emergent strategy discovery.
 
-### Phase 2: Selection Policy (Game Theory & Inference)
-- [ ] Parse `vgc-battle-logs` to construct conditional probability adjacency matrices (Items/Abilities/EVs).
-- [ ] Implement the `BayesianInferenceEngine` to hydrate opponent Team Preview data dynamically with Procedural Variance Injection.
-- [ ] Integrate parallel local battles to calculate zero-sum payoff matrices for 15x15 lead combinations.
-- [ ] Implement SciPy linear programming solvers to extract optimal mixed-strategy deployment vectors.
+**Selection Policy** — During Team Preview, a Bayesian engine hydrates hidden opponent states from co-occurrence priors. A zero-sum payoff matrix is constructed via parallel sub-tournaments, then resolved to a Nash equilibrium mixed strategy — returning the optimal 4-Pokémon active roster.
 
-### Phase 3: Battle Policy (MARL & Combat Mechanics)
-- [ ] Train Behavior Cloning (BC) initializers on human `vgc-battle-logs` with Frame Stacking.
-- [ ] Implement DQN and PPO algorithms tailored to the `poke-env` action space.
-- [ ] Establish the Competitor League environment and execute PSRO training loops.
+**Teambuild Policy** — Evolutionary/genetic algorithms evolve full 6-Pokémon rosters against metagame simulations. Deep match-up predictors serve as fitness evaluators without expensive battle simulations.
 
-### Phase 4: Teambuild Policy (Evolutionary Draft Engine)
-- [ ] Integrate offline relational ETL pipelines to output deterministic Generation 0 seeds.
-- [ ] Build the Evolutionary Algorithm loop (Tournament Selection, Crossover, Probability-Weighted Mutation).
-- [ ] Deploy Adversarial Balance Agents to evaluate roster meta-entropy and prevent strategy stagnation.
+---
+
+## Quick Start
+
+```bash
+# Clone & install
+git clone https://github.com/your-org/vgc-mlops-engine
+cd vgc-mlops-engine
+uv sync --frozen
+
+# Run benchmarks
+python -m benchmarks.evaluate_battle
+python -m benchmarks.evaluate_selection
+
+# Launch full MLOps stack
+docker compose up --build
+```
+
+---
+
+## Project Phases
+
+| Phase | Status | Deliverables |
+|-------|--------|-------------|
+| **1 — MLOps Infrastructure** | ✅ Complete | Docker stack (MLflow, Prometheus, Grafana), CI/CD, `ruff`/`mypy`/`pytest` |
+| **2 — Selection Policy** | 🔄 In Progress | Bayesian priors, payoff matrices, Nash LP, GMM archetype analysis |
+| **3 — Battle Policy** | 📋 Planned | BC initializer, DQN + PPO, Self-Play, PSRO league |
+| **4 — Teambuild Policy** | 📋 Planned | Evolutionary draft, adversarial balance agents |
+
+---
+
+## Repository Structure
+
+```
+src/
+├── agent/
+│   ├── battle_policy/        # Joint-action heuristic + DRL baselines
+│   │   ├── heuristics/       # Scoring, threat, synergy, type chart
+│   │   ├── baselines/        # Epsilon-Greedy, Softmax
+│   │   └── utils/            # Type effectiveness matrix
+│   ├── selection_policy/     # Game theory + Bayesian inference
+│   │   ├── inference/        # Bayesian, GMM, Nash, Payoff
+│   │   └── heuristics/       # Archetype, matchup, scoring
+│   ├── core_player.py        # Abstract VGC agent
+│   └── teambuilder.py        # Evocation draft stub
+├── data_ingestion/           # Bronze layer: API extraction
+├── data_processing/          # Silver→Gold: hydration, tensors
+├── config/                   # YAML weights, Pydantic schemas
+benchmarks/                   # Cross-eval tournaments + MLflow logging
+tests/                        # pytest + Hypothesis property tests
+infrastructure/               # Docker, n8n, Cloudflare
+```
+
+---
+
+## Benchmarks
+
+| Benchmark | Description | Metrics Tracked |
+|-----------|-------------|----------------|
+| **Battle** | 6-policy cross-eval tournament | Win rates vs Random, MaxBasePower, SimpleHeuristics |
+| **Selection** | Bayesian Nash vs baselines | Matrix resolution time, win rate delta |
+| **Bayesian** | Offline prediction accuracy | Item/ability prediction accuracy |
+| **GMM** | Metagame clustering quality | Silhouette score, log-likelihood |
+
+All benchmark results are logged to MLflow and visualized in Grafana dashboards.
+
+---
+
+## License
+
+Custom [VGC-AI Tournament Exclusion License](LICENSE) — personal and educational use permitted; commercial and tournament use prohibited.
+
+---
+
+<p align="center">
+  <sub>Built with Python 3.14 • poke-env • vgc-bench • MLflow • Docker • SciPy</sub>
+</p>

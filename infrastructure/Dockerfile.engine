@@ -1,5 +1,5 @@
 # Builder Stage
-FROM python:3.14-slim AS builder
+FROM python:3.13-slim AS builder
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y git build-essential
@@ -16,11 +16,11 @@ RUN uv sync --frozen --no-dev --python /app/.venv/bin/python
 COPY . .
 
 # Runtime Stage
-FROM python:3.14-slim
+FROM python:3.13-slim
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 COPY src/ ./src/
 
-CMD ["python", "-m", "src.agent.battle_policy.main"]
+CMD ["python", "-m", "src.legacy_agent.battle_policy.main"]

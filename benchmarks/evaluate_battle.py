@@ -8,9 +8,9 @@ from poke_env.player import RandomPlayer, MaxBasePowerPlayer, SimpleHeuristicsPl
 from poke_env.ps_client import ServerConfiguration
 from poke_env.teambuilder import ConstantTeambuilder
 
-from src.agent.battle_policy.main import DongimonHeuristic
-from src.agent.battle_policy.baselines.epsilon_greedy import EpsilonGreedyBattlePolicy
-from src.agent.battle_policy.baselines.softmax import SoftmaxBattlePolicy
+from src.legacy_agent.battle_policy.main import DongimonHeuristic
+from src.legacy_agent.battle_policy.baselines.epsilon_greedy import EpsilonGreedyBattlePolicy
+from src.legacy_agent.battle_policy.baselines.softmax import SoftmaxBattlePolicy
 
 # Valid Gen 9 VGC Team
 DUMMY_TEAM = """

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import mlflow
 from sklearn.metrics import silhouette_score
-from src.agent.selection_policy.inference.gmm import ArchetypeGMM
+from src.legacy_agent.selection_policy.inference.gmm import ArchetypeGMM
 
 def run_gmm_benchmark() -> None:
     mlflow.set_tracking_uri("http://localhost:5000")

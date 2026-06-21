@@ -48,6 +48,7 @@ exclude = ["src/legacy_agent/"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+norecursedirs = ["src/legacy_agent"]
 
 [tool.uv.sources]
 vgc-bench = { path = "C:/Users/Mohammed Ayman PC/vgc-bench", editable = true }

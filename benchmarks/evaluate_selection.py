@@ -11,7 +11,7 @@ from poke_env.ps_client import ServerConfiguration
 from poke_env.battle import AbstractBattle
 
 from poke_env.teambuilder import ConstantTeambuilder
-from src.agent.selection_policy.bayesian_do_selection import BayesianDoubleOraclePolicy
+from src.legacy_agent.selection_policy.bayesian_do_selection import BayesianDoubleOraclePolicy
 
 class SelectionBenchmarkPlayer(SimpleHeuristicsPlayer): # type: ignore[misc]
     """

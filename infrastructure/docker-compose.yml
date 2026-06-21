@@ -51,10 +51,47 @@ services:
     networks:
       - vgc_network
 
+  mlflow:
+    image: python:3.13-slim
+    container_name: mlflow-server
+    restart: unless-stopped
+    command: /bin/sh -c "pip install mlflow && mlflow server --host 0.0.0.0 --port 5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    networks:
+      - vgc_network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-server
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    networks:
+      - vgc_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - vgc_network
+
 volumes:
   n8n_data:
-    external: true
     name: vgc-mlops-engine_n8n_data
+  mlflow_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   vgc_network:

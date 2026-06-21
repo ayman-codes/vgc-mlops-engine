@@ -1,3 +1,9 @@
+"""Macro-feature extraction for team composition analysis.
+
+Aggregates per-species base stats into four float32 features used
+by the GMM archetype classifier.
+"""
+
 import numpy as np
 from numpy.typing import NDArray
 from poke_env.data import GenData
@@ -18,6 +24,19 @@ ALL_TYPES: list[str] = list(TYPE_CHART.keys())
 
 
 def aggregate_macro_features(species_list: list[str]) -> dict[str, np.float32]:
+    """Aggregate per-species base stats into 4 macro-features.
+
+    Computes avg_speed, phys_spec_ratio (Atk sum / SpA sum),
+    bulk_index (HP+Def+SpD average), and type_synergy_density
+    (fraction of typed attacks resisted by at least one team member).
+
+    Args:
+        species_list: List of species names (lowercase, e.g. "landorus").
+
+    Returns:
+        Dict with keys: avg_speed, phys_spec_ratio, bulk_index,
+        type_synergy_density — all np.float32.
+    """
     gen_data = _get_gen_data()
     n = len(species_list)
 
@@ -83,6 +102,16 @@ def aggregate_macro_features(species_list: list[str]) -> dict[str, np.float32]:
 
 
 def macro_features_array(species_list: list[str]) -> NDArray[np.float32]:
+    """Return macro-features as a numpy array for model inference.
+
+    Order: [avg_speed, phys_spec_ratio, bulk_index, type_synergy_density].
+
+    Args:
+        species_list: List of species names.
+
+    Returns:
+        Shape (4,) float32 array.
+    """
     features = aggregate_macro_features(species_list)
     return np.array(
         [features["avg_speed"], features["phys_spec_ratio"], features["bulk_index"], features["type_synergy_density"]],

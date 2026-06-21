@@ -1,3 +1,9 @@
+"""Archetype classification using a pre-trained GMM model.
+
+Loads the GMM + StandardScaler from models/archetype_gmm.pkl
+and provides probability distribution and hard-label prediction.
+"""
+
 import os
 from typing import Any
 import numpy as np
@@ -28,6 +34,15 @@ def _load_model() -> tuple[GaussianMixture, StandardScaler | None]:
 
 
 def predict_archetype(opponent_species_list: list[str]) -> NDArray[np.float64]:
+    """Predict the archetype probability distribution for an opponent team.
+
+    Args:
+        opponent_species_list: List of opponent species names (lowercase).
+
+    Returns:
+        Float64 array of shape (n_components,) where each entry is the
+        probability that the team belongs to that archetype cluster.
+    """
     model, scaler = _load_model()
     features = macro_features_array(opponent_species_list).reshape(1, -1)
     if scaler is not None:
@@ -37,6 +52,14 @@ def predict_archetype(opponent_species_list: list[str]) -> NDArray[np.float64]:
 
 
 def predict_archetype_label(opponent_species_list: list[str]) -> int:
+    """Predict the hard archetype label for an opponent team.
+
+    Args:
+        opponent_species_list: List of opponent species names (lowercase).
+
+    Returns:
+        Integer cluster index (0 or 1 for the 2-cluster GMM).
+    """
     model, scaler = _load_model()
     features = macro_features_array(opponent_species_list).reshape(1, -1)
     if scaler is not None:

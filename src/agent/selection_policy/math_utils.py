@@ -1,3 +1,9 @@
+"""Type chart and damage calculation utilities for Generation 9.
+
+Provides the 18-type effectiveness matrix and the standard damage formula
+used by the selection pipeline for strategy screening.
+"""
+
 TYPE_CHART: dict[str, dict[str, float]] = {
     "normal": {"rock": 0.5, "ghost": 0.0, "steel": 0.5},
     "fire": {"fire": 0.5, "water": 0.5, "grass": 2.0, "ice": 2.0, "bug": 2.0, "rock": 0.5, "dragon": 0.5, "steel": 2.0},
@@ -21,6 +27,15 @@ TYPE_CHART: dict[str, dict[str, float]] = {
 
 
 def type_effectiveness(move_type: str, defender_type: str) -> float:
+    """Look up the type effectiveness multiplier between a move and a defender type.
+
+    Args:
+        move_type: The attacking move's type (lowercase, e.g. "fire").
+        defender_type: The defender's type (lowercase, e.g. "grass").
+
+    Returns:
+        Effectiveness multiplier (0.0, 0.5, 1.0, or 2.0).
+    """
     return TYPE_CHART.get(move_type, {}).get(defender_type, 1.0)
 
 
@@ -31,6 +46,18 @@ def calculate_damage(
     defense: int,
     modifier: float = 1.0,
 ) -> float:
+    """Base Generation 9 damage formula without type interaction.
+
+    Args:
+        level: Attacker's level (1–100).
+        power: Move base power.
+        attack: Attacker's offensive stat (Atk or SpA).
+        defense: Defender's defensive stat (Def or SpD).
+        modifier: Final accumulated multiplier (STAB, type effectiveness, etc.).
+
+    Returns:
+        Rounded damage expectation as a float.
+    """
     return ((2 * level / 5 + 2) * power * attack / defense / 50 + 2) * modifier
 
 
@@ -43,6 +70,20 @@ def calculate_damage_with_types(
     defender_types: list[str],
     stab: float = 1.0,
 ) -> float:
+    """Damage calculation combining base formula, type chart, and STAB.
+
+    Args:
+        level: Attacker's level.
+        power: Move base power.
+        attack: Attacker's offensive stat.
+        defense: Defender's defensive stat.
+        move_type: Move type for type-chart lookup.
+        defender_types: List of the defender's types (1 or 2 elements).
+        stab: Same-type attack bonus (default 1.0, typically 1.5).
+
+    Returns:
+        Final damage after type effectiveness and STAB.
+    """
     type_eff = 1.0
     for t in defender_types:
         type_eff *= type_effectiveness(move_type, t)

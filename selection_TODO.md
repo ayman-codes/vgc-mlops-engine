@@ -34,11 +34,16 @@
 
 13. **Showdown server format unknown** — Using `gen9randombattle` as fallback because the exact VGC format name for the local server is unknown. May fail if the server doesn't support custom teams for random battle.
 
-14. **`_showdown_battle` unused inside `double_oracle.py`** — The function is only used as default in `expand_matrix_async`. May need to add `# type: ignore` for the import inside the function (lazy import of poke_env).
+14. **`_showdown_battle` unused inside `double_oracle.py`** — The function is only used as default in `expand_matrix_async`. Has lazy import of poke_env to avoid circular import at module load.
 
-## Remaining Work
+15. **`solve_sub_matrix` sign error** — LP constraint `A_ub[:, n]` had `-1.0` instead of `+1.0`. Fixed. Was caught by `test_solve_sub_matrix_pure_for_dominant_row`.
 
-- [ ] Create `main.py` (SelectionPolicyPlayer with teampreview hook)
-- [ ] Phase 4.2: Shannon entropy telemetry + GMM model registration
-- [ ] Tests: `test_double_oracle.py`, `test_optimizer.py`, `test_main.py`
-- [ ] Quality gate: ruff → mypy → pytest
+16. **`test_hydrate_single_species_has_evs` flaky** — Snorlax Smogon data contains >=3 spreads with `0/0/0/0/0/0` EVs (weight ~1.4%). Fixed by retry loop (5 attempts).
+
+17. **`test_solve_sub_matrix_uniform_for_symmetric` invalid** — Symmetric matrix has non-unique Nash equilibria; any mixture is valid. LP solver picks one corner. Replaced with valid equilibrium test.
+
+18. **main.py unused imports** — `expand_matrix_async` and `solve_sub_matrix` imported but unused. Removed.
+
+## Progress
+
+All phases 0–4 implemented. 93 tests passing. ruff + mypy clean on 28 source files.

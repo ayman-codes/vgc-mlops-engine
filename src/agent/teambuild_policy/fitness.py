@@ -17,18 +17,22 @@ _EPSILON = 1e-10
 def bayesian_map_fitness(
     indices: list[int],
     cache: TeambuildCache,
+    archetype_weight: float = 1.0,
 ) -> float:
     """Compute Bayesian MAP fitness for a candidate team of 6 species.
 
-    Fitness = Sum(log(P(Usage_i))) - Min_j(Distance(Features_scaled, Centroid_j))
+    Fitness = Sum(log(P(Usage_i))) - Weight * Min_j(Distance(Features_scaled, Centroid_j))
 
     The usage term rewards teams composed of popular metagame species.
     The archetype distance term penalizes teams that do not resemble
-    any discovered GMM archetype.
+    any discovered GMM archetype. The weight parameter scales the
+    archetype distance to balance against usage log-priors.
 
     Args:
         indices: List of 6 integer indices into cache.species_keys.
         cache: Initialized TeambuildCache with GMM model and usage data.
+        archetype_weight: Multiplier for the archetype distance penalty.
+            Higher values penalize non-archetypal teams more heavily.
 
     Returns:
         Float fitness score. Higher is better. Negative values are
@@ -69,4 +73,4 @@ def bayesian_map_fitness(
     distances = np.linalg.norm(features_scaled - centroids, axis=1)
     archetype_distance = float(np.min(distances))
 
-    return usage_term - archetype_distance
+    return usage_term - (archetype_weight * archetype_distance)

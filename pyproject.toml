@@ -1,9 +1,9 @@
 [project]
 name = "vgc-mlops-engine"
 version = "0.1.0"
-description = "Add your description here"
+description = "A multi agent for Pokemon Showdown. It utilizes DRL for battle decisions. GMM --> Bayesian --> Nash equilibrium for the Seleciton policy. GMM, Bayesian and EA algorithms for teambuild"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
     "datasets>=4.8.4",
     "duckdb>=1.5.2",
@@ -23,9 +23,9 @@ dependencies = [
     "thefuzz>=0.22.1",
     "types-requests>=2.33.0.20260408",
     "poke-env",
-    "vgc-bench",
     "mlflow",
     "boto3>=1.43.34",
+    "vgc-bench",
 ]
 
 [dependency-groups]
@@ -33,8 +33,8 @@ dev = [
     "hypothesis>=6.151.10",
     "matplotlib>=3.10.8",
     "mypy>=1.20.0",
-    "pytest>=9.0.2",
-    "ruff>=0.15.9",
+    "pytest>=8.3.5",
+    "ruff==0.11.12",
     "types-pyyaml>=6.0.12.20250915",
 ]
 
@@ -51,10 +51,15 @@ exclude = ["src/legacy_agent/"]
 pythonpath = ["."]
 norecursedirs = ["src/legacy_agent"]
 
-[tool.uv.sources]
-vgc-bench = { path = "C:/Users/Mohammed Ayman PC/vgc-bench", editable = true }
-
 [tool.uv]
 override-dependencies = [
     "huggingface-hub>=0.36.2"
 ]
+
+[tool.uv.workspace]
+members = [
+    "vgc-bench",
+]
+
+[tool.uv.sources]
+vgc-bench = { workspace = true }

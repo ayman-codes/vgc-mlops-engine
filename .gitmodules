@@ -1,0 +1,3 @@
+[submodule "vgc-bench"]
+	path = vgc-bench
+	url = https://github.com/cameronangliss/vgc-bench.git

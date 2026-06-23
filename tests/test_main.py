@@ -1,50 +1,41 @@
 import numpy as np
 
-from src.agent.base import Pokemon
-from src.agent.selection_policy.main import (
-    _shannon_entropy,
-    _build_team_order,
-    _species_showdown_name,
+from src.agent.selection_policy.utils import (
+    shannon_entropy,
+    build_team_order,
 )
-from src.agent.selection_policy.double_oracle import Strategy
+from src.agent.selection_policy.double_oracle import Strategy, _species_showdown_name
 
 
 def test_shannon_entropy_uniform_is_max() -> None:
     probs = np.array([0.25, 0.25, 0.25, 0.25], dtype=np.float64)
-    h = _shannon_entropy(probs)
+    h = shannon_entropy(probs)
     assert np.isclose(h, 2.0, atol=1e-6)
 
 
 def test_shannon_entropy_certainty_is_zero() -> None:
     probs = np.array([1.0, 0.0], dtype=np.float64)
-    h = _shannon_entropy(probs)
+    h = shannon_entropy(probs)
     assert np.isclose(h, 0.0, atol=1e-6)
 
 
 def test_shannon_entropy_single_element() -> None:
     probs = np.array([1.0], dtype=np.float64)
-    h = _shannon_entropy(probs)
+    h = shannon_entropy(probs)
     assert np.isclose(h, 0.0, atol=1e-6)
 
 
 def test_shannon_entropy_three_outcomes() -> None:
     probs = np.array([0.5, 0.3, 0.2], dtype=np.float64)
-    h = _shannon_entropy(probs)
+    h = shannon_entropy(probs)
     assert h > 0.0
     assert h < 2.0
 
 
 def test_build_team_order_returns_team_string() -> None:
-    team = [
-        Pokemon(species="snorlax", nature="adamant"),
-        Pokemon(species="charizard", nature="timid"),
-        Pokemon(species="pikachu", nature="jolly"),
-        Pokemon(species="garchomp", nature="jolly"),
-        Pokemon(species="landorus", nature="adamant"),
-        Pokemon(species="fluttermane", nature="timid"),
-    ]
+    species = ["snorlax", "charizard", "pikachu", "garchomp", "landorus", "fluttermane"]
     strategy: Strategy = (0, 1, 2, 3, 4, 5)
-    result = _build_team_order(team, strategy)
+    result = build_team_order(species, strategy)
     assert result.startswith("/team ")
     assert "Snorlax" in result
     assert "Charizard" in result
@@ -54,16 +45,9 @@ def test_build_team_order_returns_team_string() -> None:
 
 
 def test_build_team_order_reversed_strategy() -> None:
-    team = [
-        Pokemon(species="snorlax", nature="adamant"),
-        Pokemon(species="charizard", nature="timid"),
-        Pokemon(species="pikachu", nature="jolly"),
-        Pokemon(species="garchomp", nature="jolly"),
-        Pokemon(species="landorus", nature="adamant"),
-        Pokemon(species="fluttermane", nature="timid"),
-    ]
+    species = ["snorlax", "charizard", "pikachu", "garchomp", "landorus", "fluttermane"]
     strategy: Strategy = (5, 4, 3, 2, 1, 0)
-    result = _build_team_order(team, strategy)
+    result = build_team_order(species, strategy)
     parts = result.split("/team ")[1].split("|")
     assert parts[0] == "Flutter Mane"
     assert parts[-1] == "Snorlax"

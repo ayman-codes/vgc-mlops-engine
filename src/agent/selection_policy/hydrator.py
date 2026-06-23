@@ -100,6 +100,26 @@ def _parse_spread(spread_key: str) -> tuple[str, list[int]]:
     return nature, evs
 
 
+def _filter_valid_spreads(spreads: dict[str, float]) -> dict[str, float]:
+    """Remove spread entries whose parsed EV sum is zero.
+
+    Zero-EV spreads originate from players who forgot to set EVs on
+    Pokemon Showdown; Smogon still logs them. Allowing these into the
+    hydrator would push disadvantaged 0/0/0/0/0/0 Pokemon into live
+    poke-env battles.
+
+    Args:
+        spreads: Mapping of spread key to usage weight.
+
+    Returns:
+        Filtered dict containing only spreads with positive EV investment.
+    """
+    return {
+        k: v for k, v in spreads.items()
+        if sum(_parse_spread(k)[1]) > 0
+    }
+
+
 def _get_dominant_archetype(archetype_distribution: list[float] | None) -> int | None:
     """Return the index of the most probable archetype cluster.
 
@@ -214,7 +234,7 @@ def hydrate_team(
         else:
             item = _weighted_choice(items_pool, variance)
 
-        spreads_pool = entry.get("Spreads", {})
+        spreads_pool = _filter_valid_spreads(entry.get("Spreads", {}))
         if dominant is not None:
             spread_mult = {}
             for sk in spreads_pool:

@@ -14,6 +14,8 @@ env/
 .env
 .env.backup
 
+#mlflow tracking
+mlflow.db
 
 # Environment Variables
 .env

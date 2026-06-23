@@ -97,10 +97,27 @@ def _species_types(species: str) -> list[str]:
     return [t.lower() for t in dex.get("types", ["normal"])]
 
 
+def _compute_opponent_average_defenses(
+    opponent_team: list[Pokemon] | None,
+) -> tuple[float, float]:
+    if not opponent_team:
+        return 100.0, 100.0
+    def_sum = 0.0
+    spd_sum = 0.0
+    for mon in opponent_team:
+        stats = _pokemon_stats(mon)
+        def_sum += stats["def"]
+        spd_sum += stats["spd"]
+    n = len(opponent_team)
+    return def_sum / n, spd_sum / n
+
+
 def _score_lead_pair(
     lead1: Pokemon,
     lead2: Pokemon,
     opponent_types: list[str],
+    avg_def: float = 100.0,
+    avg_spd: float = 100.0,
 ) -> float:
     dmg_sum = 0.0
     for lead in (lead1, lead2):
@@ -118,13 +135,13 @@ def _score_lead_pair(
             category = move_data.get("category", "physical")
             if category.startswith("physical"):
                 attack = stats["atk"]
-                defense = 80
+                defense = avg_def
             else:
                 attack = stats["spa"]
-                defense = 80
+                defense = avg_spd
             stab = 1.5 if move_type in mon_types else 1.0
             dmg = calculate_damage_with_types(
-                50, int(bp), int(attack), defense,
+                50, int(bp), int(attack), int(defense),
                 move_type, opponent_types, stab,
             )
             best_dmg = max(best_dmg, dmg)
@@ -136,6 +153,7 @@ def enumerate_top_k_strategies(
     team: list[Pokemon],
     k: int = 3,
     opponent_types: list[str] | None = None,
+    opponent_team: list[Pokemon] | None = None,
 ) -> list[Strategy]:
     """Return top-K full-team orderings by lead damage output.
 
@@ -144,6 +162,8 @@ def enumerate_top_k_strategies(
         k: Number of strategies to return (clamped to available pairs).
         opponent_types: Target type list for damage estimation;
             defaults to ["normal"].
+        opponent_team: Opponent's 6 Pokemon for defense-stat estimation;
+            if None, uses generic level-50 averages.
 
     Returns:
         List of (lead1, lead2, back1, back2, back3, back4) index tuples
@@ -151,14 +171,20 @@ def enumerate_top_k_strategies(
     """
     if len(team) != 6:
         return []
-    target = opponent_types or ["normal"]
+    if opponent_types is not None:
+        target = opponent_types
+    elif opponent_team is not None:
+        target = list({t for mon in opponent_team for t in _species_types(mon.species)})
+    else:
+        target = ["normal"]
+    avg_def, avg_spd = _compute_opponent_average_defenses(opponent_team)
     indices = list(range(6))
     scored_pairs: list[tuple[float, tuple[int, int]]] = []
     for i in range(6):
         for j in range(6):
             if i == j:
                 continue
-            dmg = _score_lead_pair(team[i], team[j], target)
+            dmg = _score_lead_pair(team[i], team[j], target, avg_def, avg_spd)
             scored_pairs.append((dmg, (i, j)))
     scored_pairs.sort(key=lambda x: x[0], reverse=True)
     top_pairs = [p[1] for p in scored_pairs[:min(k, len(scored_pairs))]]
@@ -238,7 +264,7 @@ async def _showdown_battle(
     opponent_team: list[Pokemon],
     opponent_strategy: Strategy,
     server_url: str = "http://localhost:8000",
-    battle_format: str = "gen9randombattle",
+    battle_format: str = "gen9customgame",
 ) -> float:
     from poke_env import AccountConfiguration, ServerConfiguration
     from poke_env.player import RandomPlayer
@@ -272,6 +298,15 @@ async def _showdown_battle(
         return 1.0 if won else 0.0
     except Exception:
         return 0.5
+    finally:
+        try:
+            us.ps_client.stop_listening()  # type: ignore[no-untyped-call]
+        except Exception:
+            pass
+        try:
+            opp.ps_client.stop_listening()  # type: ignore[no-untyped-call]
+        except Exception:
+            pass
 
 
 async def expand_matrix_async(
@@ -300,11 +335,16 @@ async def expand_matrix_async(
     m = len(opponent_strategies)
     matrix = np.zeros((n, m), dtype=np.float64)
     fn = battle_fn or _showdown_battle
+    bs = max(1, batch_size)
     for i in range(n):
-        row_results = await asyncio.gather(*[
-            fn(our_team, our_strategies[i], opponent_team, opponent_strategies[j])
-            for j in range(m)
-        ])
+        row_results: list[float] = []
+        for chunk_start in range(0, m, bs):
+            chunk_j = range(chunk_start, min(chunk_start + bs, m))
+            chunk_results = await asyncio.gather(*[
+                fn(our_team, our_strategies[i], opponent_team, opponent_strategies[j])
+                for j in chunk_j
+            ])
+            row_results.extend(chunk_results)
         for j, result in enumerate(row_results):
             matrix[i, j] = result
     return matrix

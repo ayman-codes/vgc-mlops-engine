@@ -14,6 +14,9 @@ from src.agent.selection_policy.double_oracle import (
     Strategy,
     enumerate_top_k_strategies,
     expand_matrix_async,
+    _score_lead_pair,
+    _pokemon_stats,
+    _species_types,
 )
 
 
@@ -63,7 +66,7 @@ async def nash_loop(
     k_max: int = 15,
     timeout_sec: float = 60.0,
     battle_fn: Any = None,
-) -> NDArray[np.float64]:
+) -> tuple[NDArray[np.float64], list[Strategy]]:
     """Run the Double Oracle loop and return the Nash mixture over our strategies.
 
     Args:
@@ -76,14 +79,14 @@ async def nash_loop(
         battle_fn: Battle function passed to expand_matrix_async.
 
     Returns:
-        Probability vector of length k_max (padded with zeros for unused entries),
-        where position i corresponds to the i-th strategy in the evolved set.
+        Tuple of (probability vector padded to k_max, final strategy list)
+        where position i in the vector corresponds to strategy i in the list.
     """
-    our_strategies = enumerate_top_k_strategies(our_team, k=k_start)
-    opp_strategies = enumerate_top_k_strategies(opponent_team, k=k_start)
+    our_strategies = enumerate_top_k_strategies(our_team, k=k_start, opponent_team=opponent_team)
+    opp_strategies = enumerate_top_k_strategies(opponent_team, k=k_start, opponent_team=our_team)
 
     if not our_strategies or not opp_strategies:
-        return np.ones(k_max, dtype=np.float64) / max(k_max, 1)
+        return np.ones(k_max, dtype=np.float64) / max(k_max, 1), []
 
     runner = oracle_runner or expand_matrix_async
     start_time = time.time()
@@ -120,10 +123,10 @@ async def nash_loop(
             opp_mix = solve_sub_matrix(matrix.T)
 
             our_best = _next_strategy(
-                our_strategies, our_team, opp_mix, k_max,
+                our_strategies, our_team, opp_mix, opponent_team, opp_strategies, k_max,
             )
             opp_best = _next_strategy(
-                opp_strategies, opponent_team, our_mix, k_max,
+                opp_strategies, opponent_team, our_mix, our_team, our_strategies, k_max,
             )
 
             if our_best is None and opp_best is None:
@@ -146,22 +149,58 @@ async def nash_loop(
 
     padded = np.zeros(k_max, dtype=np.float64)
     padded[: len(final_mix)] = final_mix
-    return padded
+    return padded, our_strategies
 
 
 def _next_strategy(
     current: list[Strategy],
     team: list[Any],
     opponent_mix: NDArray[np.float64] | None,
+    opponent_team: list[Any],
+    opp_strategies: list[Strategy],
     k_max: int,
 ) -> Strategy | None:
     if len(current) >= k_max:
         return None
+    if opponent_mix is None or len(opponent_mix) == 0:
+        return None
+    if not opp_strategies:
+        return None
 
     existing = set(current)
+    candidates: list[Strategy] = []
     for k in range(len(current) + 1, k_max + 1):
-        candidates = enumerate_top_k_strategies(team, k=k)
-        for s in candidates:
+        for s in enumerate_top_k_strategies(team, k=k, opponent_team=opponent_team):
             if s not in existing:
-                return s
-    return None
+                candidates.append(s)
+                existing.add(s)
+    if not candidates:
+        return None
+
+    best_score = -float("inf")
+    best_cand: Strategy | None = None
+
+    for cand in candidates:
+        cand_lead1 = team[cand[0]]
+        cand_lead2 = team[cand[1]]
+        expected = 0.0
+        for j, opp_strat in enumerate(opp_strategies):
+            w = opponent_mix[j]
+            if w <= 0:
+                continue
+            opp_lead1 = opponent_team[opp_strat[0]]
+            opp_lead2 = opponent_team[opp_strat[1]]
+            opp_types = list(
+                set(_species_types(opp_lead1.species) + _species_types(opp_lead2.species))
+            )
+            o_stats1 = _pokemon_stats(opp_lead1)
+            o_stats2 = _pokemon_stats(opp_lead2)
+            avg_def = (o_stats1["def"] + o_stats2["def"]) / 2
+            avg_spd = (o_stats1["spd"] + o_stats2["spd"]) / 2
+            score = _score_lead_pair(cand_lead1, cand_lead2, opp_types, avg_def, avg_spd)
+            expected += w * score
+        if expected > best_score:
+            best_score = expected
+            best_cand = cand
+
+    return best_cand

@@ -25,6 +25,7 @@ dependencies = [
     "poke-env",
     "vgc-bench",
     "mlflow",
+    "boto3>=1.43.34",
 ]
 
 [dependency-groups]

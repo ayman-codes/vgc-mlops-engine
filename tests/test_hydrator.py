@@ -26,12 +26,10 @@ def test_hydrate_single_species_has_nature() -> None:
 
 
 def test_hydrate_single_species_has_evs() -> None:
-    for _ in range(5):
-        team = hydrate_team(["snorlax"])
-        mon = team[0]
-        if mon.ev_hp + mon.ev_atk + mon.ev_def + mon.ev_spa + mon.ev_spd + mon.ev_spe > 0:
-            return
-    assert False, "All 5 attempts produced 0-EV Snorlax spread"
+    team = hydrate_team(["snorlax"])
+    mon = team[0]
+    ev_sum = mon.ev_hp + mon.ev_atk + mon.ev_def + mon.ev_spa + mon.ev_spd + mon.ev_spe
+    assert ev_sum > 0, "Snorlax EV spread must be non-zero"
 
 
 def test_hydrate_single_species_has_moves() -> None:
@@ -77,6 +75,45 @@ def test_hydrate_unknown_species_fills_placeholder() -> None:
 def test_hydrate_empty_list_returns_empty() -> None:
     team = hydrate_team([])
     assert team == []
+
+
+def test_hydrate_archetype_distribution_is_accepted() -> None:
+    team = hydrate_team(["snorlax"], archetype_distribution=[1.0, 0.0])
+    assert len(team) == 1
+    assert team[0].species == "snorlax"
+    assert team[0].item != ""
+
+
+def test_item_counter_multiplier_cluster0_favors_spd() -> None:
+    from src.agent.selection_policy.hydrator import _item_counter_multiplier
+
+    assert _item_counter_multiplier("shucaberry", 0) > 1.0
+    assert _item_counter_multiplier("chopleberry", 0) < 1.0
+    assert _item_counter_multiplier("sitrusberry", 0) == 1.0
+
+
+def test_item_counter_multiplier_cluster1_favors_phys() -> None:
+    from src.agent.selection_policy.hydrator import _item_counter_multiplier
+
+    assert _item_counter_multiplier("shucaberry", 1) < 1.0
+    assert _item_counter_multiplier("chopleberry", 1) > 1.0
+    assert _item_counter_multiplier("sitrusberry", 1) == 1.0
+
+
+def test_spread_counter_multiplier_favors_spd_for_cluster0() -> None:
+    from src.agent.selection_policy.hydrator import _spread_counter_multiplier
+
+    spd_heavy = [0, 0, 0, 0, 252, 0]
+    def_heavy = [0, 0, 252, 0, 0, 0]
+    assert _spread_counter_multiplier(spd_heavy, 0) > _spread_counter_multiplier(def_heavy, 0)
+
+
+def test_spread_counter_multiplier_favors_def_for_cluster1() -> None:
+    from src.agent.selection_policy.hydrator import _spread_counter_multiplier
+
+    spd_heavy = [0, 0, 0, 0, 252, 0]
+    def_heavy = [0, 0, 252, 0, 0, 0]
+    assert _spread_counter_multiplier(def_heavy, 1) > _spread_counter_multiplier(spd_heavy, 1)
 
 
 def test_hydrate_produces_poke_env_compatible() -> None:

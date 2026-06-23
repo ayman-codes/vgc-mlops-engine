@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from src.data_processing.s3_utils import upload_file_to_s3
 
 SMOGON_PATH = "data/processed/smogon_normalized.parquet"
 STATS_PATH = "data/processed/dimension_stats.parquet"
@@ -47,6 +48,12 @@ def execute_tensor_engineering() -> None:
 
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     df_gold.to_parquet(OUTPUT_PATH, index=False)
+    
+    upload_file_to_s3(
+        local_path=OUTPUT_PATH,
+        bucket_name="vgc-mlops-engine-data",
+        s3_key=OUTPUT_PATH 
+    )
 
 if __name__ == "__main__":
     execute_tensor_engineering()
